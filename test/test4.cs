@@ -1,17 +1,18 @@
-class firstclass{
-  int a,c;
-  float b,d;
-  public firstclass(){
-  }
+internal class firstclass
+{
+    private int a, c;
+    private float b, d;
 }
-class secondclass {
-  int x,y;
-  char d;
-  public secondclass(){
-  }
+
+internal class secondclass
+{
+    private char d;
+    private int x, y;
 }
-class someclass {
-  static void Main(){
-    return;
-  }
+
+internal class someclass
+{
+    private static void Main()
+    {
+    }
 }

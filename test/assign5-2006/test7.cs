@@ -1,12 +1,18 @@
-class firstclass{
-  int a;
-  public float a(){ //duplicate a
-    int x;
-    float y;
-  }
+internal class firstclass
+{
+    private int a;
+
+    public float a()
+    {
+        //duplicate a
+        int x;
+        float y;
+    }
 }
-class someclass {
-  static void Main(){
-    return;
-  }
+
+internal class someclass
+{
+    private static void Main()
+    {
+    }
 }

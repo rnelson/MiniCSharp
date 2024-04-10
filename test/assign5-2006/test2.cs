@@ -1,11 +1,15 @@
-class firstclass{
-  public firstclass(){
-    int x;
-    float y;
-  }
+internal class firstclass
+{
+    public firstclass()
+    {
+        int x;
+        float y;
+    }
 }
-class someclass {
-  static void Main(){
-    return;
-  }
+
+internal class someclass
+{
+    private static void Main()
+    {
+    }
 }

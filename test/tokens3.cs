@@ -1,3 +1,4 @@
-  //comment
+//comment
+
 "Unterminated literal
 //comment

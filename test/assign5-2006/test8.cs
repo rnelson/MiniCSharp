@@ -1,8 +1,10 @@
-class someclass {
-  float a,b,c;
-  int x,y,z;
-  static void main(){ //should be Main
-    return;
-  }
-}
+internal class someclass
+{
+    private float a, b, c;
+    private int x, y, z;
 
+    private static void main()
+    {
+        //should be Main
+    }
+}

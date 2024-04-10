@@ -1,12 +1,11 @@
-class MyClass{
-  static void Main(){
-    float a,b,c;
-    int w,x,y;
+internal class MyClass
+{
+    private static void Main()
+    {
+        int w, x, y;
 
-    a = 10;
-    b = 20;
-    c = a+b;
-
-    return;
-  }
+        float a = 10;
+        float b = 20;
+        var c = a + b;
+    }
 }

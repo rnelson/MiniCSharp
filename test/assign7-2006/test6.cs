@@ -1,19 +1,20 @@
-class firstclass{
-  public firstclass(){
-  }
-  public int secondclass(){
-    int a,b,c,d,e,f;
+internal class firstclass
+{
+    public int secondclass()
+    {
+        int d, e, f;
 
-    a=5;
-    b=10;
-    c=(e + d) * ( a + b);
-    return c;
-  }
+        var a = 5;
+        var b = 10;
+        var c = (e + d) * (a + b);
+        return c;
+    }
 }
-class someclass {
-  static void Main(){
-    int a;
 
-    return;
-  }
+internal class someclass
+{
+    private static void Main()
+    {
+        int a;
+    }
 }

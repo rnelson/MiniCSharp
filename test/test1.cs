@@ -1,6 +1,6 @@
-class someclass {
-  static void Main(){
-    return;
-  }
+internal class someclass
+{
+    private static void Main()
+    {
+    }
 }
-
