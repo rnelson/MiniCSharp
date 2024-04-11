@@ -201,148 +201,152 @@ public class AssemblyGenerator
         var t3 = tokens[2] ?? null;
         var t4 = tokens[3] ?? null;
         var t5 = tokens[4] ?? null;
+
+        if ("START" == t1)
+            return;
         
-        while ("START" != t1)
+        var sizeOLocals = 0;
+        var sizeOParams = 0;
+        var locals = 0;
+
+        Element? method;
+        string procedureName;
+        switch (t1)
         {
-            var sizeOLocals = 0;
-            var sizeOParams = 0;
-            var locals = 0;
+            case "PROC":
+                method = FindMethod(t2);
+                if (method != null)
+                {
+                    sizeOLocals = method.GetSizeOfLocals();
+                    sizeOParams = method.GetSizeOfParams();
+                }
+                else
+                {
+                    sizeOLocals = 30; // No magic to this number
+                    sizeOParams = 0;
+                }
 
-            Element? method;
-            string procedureName;
-            switch (t1)
-            {
-                case "PROC":
-                    method = FindMethod(t2);
-                    if (method != null)
-                    {
-                        sizeOLocals = method.GetSizeOfLocals();
-                        sizeOParams = method.GetSizeOfParams();
-                    }
-                    else
-                    {
-                        sizeOLocals = 30; // No magic to this number
-                        sizeOParams = 0;
-                    }
+                locals = sizeOLocals;
 
-                    locals = sizeOLocals;
+                // Rename the procedure
+                procedureName = t2.Replace(".", "_");
 
-                    // Rename the procedure
-                    procedureName = t2.Replace(".", "_");
+                Emit($"{procedureName} proc");
+                Emit("    push bp");
+                Emit("    mov bp, sp");
+                if (locals != 0)
+                    Emit($"    sub sp, {locals}");
+                break;
+            case "ENDP":
+                method = FindMethod(t2);
+                if (method != null)
+                {
+                    sizeOLocals = method.GetSizeOfLocals();
+                    sizeOParams = method.GetSizeOfParams();
+                }
+                else
+                {
+                    sizeOLocals = 30; // No magic to this number
+                    sizeOParams = 0;
+                }
 
-                    Emit($"{procedureName} proc");
-                    Emit("    push bp");
-                    Emit("    mov bp, sp");
-                    if (locals != 0)
-                        Emit($"    sub sp, {locals}");
-                    break;
-                case "ENDP":
-                    method = FindMethod(t2);
-                    if (method != null)
-                    {
-                        sizeOLocals = method.GetSizeOfLocals();
-                        sizeOParams = method.GetSizeOfParams();
-                    }
-                    else
-                    {
-                        sizeOLocals = 30; // No magic to this number
-                        sizeOParams = 0;
-                    }
+                locals = sizeOLocals;
 
-                    locals = sizeOLocals;
+                // Rename the procedure
+                procedureName = t2.Replace(".", "_");
 
-                    // Rename the procedure
-                    procedureName = t2.Replace(".", "_");
-
-                    if (locals != 0)
-                        Emit($"    add sp, {locals}");
-                    Emit("    pop bp");
-                    Emit(sizeOParams == 0 ? "    ret" : $"    ret {sizeOParams}");
-                    Emit($"{procedureName} endp");
-                    break;
-                case "PUSH":
-                    Emit(!TypeHelper.IsNumeric(t2) ? $"    push {GetAddress(t2)}" : $"    push {t2}");
-                    break;
-                case "CALL":
-                    Emit($"    call {t2.Replace(".", "_")}");
-                    break;
-                case "WRI":
-                    WriteInt(t2);
-                    break;
-                case "WRS":
-                    WriteStr(t2);
-                    break;
-                case "WRLN":
-                    WriteLn();
-                    break;
-                case "RDI":
-                    ReadInt(t2);
-                    break;
-                default:
-                    // Figure out what kind of statement we have
-                    if (tacTokenCount == 5)
+                if (locals != 0)
+                    Emit($"    add sp, {locals}");
+                Emit("    pop bp");
+                Emit(sizeOParams == 0 ? "    ret" : $"    ret {sizeOParams}");
+                Emit($"{procedureName} endp");
+                break;
+            case "PUSH":
+                Emit(!TypeHelper.IsNumeric(t2) ? $"    push {GetAddress(t2)}" : $"    push {t2}");
+                break;
+            case "CALL":
+                Emit($"    call {t2.Replace(".", "_")}");
+                break;
+            case "WRI":
+                WriteInt(t2);
+                break;
+            case "WRS":
+                WriteStr(t2);
+                break;
+            case "WRLN":
+                WriteLn();
+                break;
+            case "RDI":
+                ReadInt(t2);
+                break;
+            default:
+                // Figure out what kind of statement we have
+                if (tacTokenCount == 5)
+                {
+                    switch (t4)
                     {
-                        switch (t4)
-                        {
-                            case "+":
-                                Add(t1, t3, t5);
-                                break;
-                            case "-":
-                                Sub(t1, t3, t5);
-                                break;
-                            case "/":
-                                Div(t1, t3, t5);
-                                break;
-                            case "*":
-                                Mul(t1, t3, t5);
-                                break;
-                            default:
-                                Console.WriteLine("Oops, unexpected situation: {0}", reader);
-                                break;
-                        }
-                    }
-                    else if (tacTokenCount == 4)
-                    {
-                        switch (t3)
-                        {
-                            case "-":
-                                Neg(t1, t4);
-                                break;
-                            default:
-                                Console.WriteLine("Oops, unexpected situation: {0}", reader);
-                                break;
-                        }
-                    }
-                    else if (tacTokenCount == 3)
-                    {
-                        Ass(t1, t3);
-                    }
-                    else
-                    {
-                        if (reader?.Length > 0)
+                        case "+":
+                            Add(t1, t3, t5);
+                            break;
+                        case "-":
+                            Sub(t1, t3, t5);
+                            break;
+                        case "/":
+                            Div(t1, t3, t5);
+                            break;
+                        case "*":
+                            Mul(t1, t3, t5);
+                            break;
+                        default:
                             Console.WriteLine("Oops, unexpected situation: {0}", reader);
+                            break;
                     }
+                }
+                else if (tacTokenCount == 4)
+                {
+                    switch (t3)
+                    {
+                        case "-":
+                            Neg(t1, t4);
+                            break;
+                        default:
+                            Console.Error.WriteLine("Oops, unexpected situation: {0}", reader);
+                            break;
+                    }
+                }
+                else if (tacTokenCount == 3)
+                {
+                    Ass(t1, t3);
+                }
+                else
+                {
+                    if (reader?.Length > 0)
+                        Console.Error.WriteLine("Oops, unexpected situation: {0}", reader);
+                }
 
-                    break;
-            }
-
-            // Get the next set of tokens
-            if (GetTokens() == false)
-                return;
+                break;
         }
+
+        // Get the next set of tokens
+        if (GetTokens() == false)
+            return;
     }
 
     /// <summary>
-    /// Write out the 'start' procedures
+    /// Write out the 'start' procedure
     /// </summary>
     private void Start()
     {
-        var firstProcedure = t2.Replace(".", "_");
+        var t2 = tokens[1] ?? null;
+        var firstProcedure = t2?.Replace(".", "_") ?? string.Empty;
 
         Emit("start proc");
         Emit("    mov ax, @data");
         Emit("    mov ds, ax");
-        Emit($"    call {firstProcedure}");
+        
+        if (!string.IsNullOrWhiteSpace(firstProcedure))
+            Emit($"    call {firstProcedure}");
+        
         Emit("    mov al, 0");
         Emit("    mov ah, 4ch");
         Emit("    int 21h");
@@ -460,7 +464,12 @@ public class AssemblyGenerator
         }
     }
 
-    /// mul (imul) instruction
+    /// <summary>
+    /// Handle a multiplication instruction
+    /// </summary>
+    /// <param name="dest">Destination location</param>
+    /// <param name="left">LHS</param>
+    /// <param name="right">RHS</param>
     private void Mul(string dest, string left, string right)
     {
         // If we're multiplying by 0, just set the value to 0. Optimization!
@@ -489,7 +498,12 @@ public class AssemblyGenerator
         Emit("    pop bx");
     }
 
-    /// div (idiv) instruction
+    /// <summary>
+    /// Handle a division instruction
+    /// </summary>
+    /// <param name="dest">Destination location</param>
+    /// <param name="left">LHS</param>
+    /// <param name="right">RHS</param>
     private void Div(string dest, string left, string right)
     {
         // If we're dividing by 0, just set the value to 0. Optimization? This was in the original code. I don't
@@ -520,7 +534,11 @@ public class AssemblyGenerator
         Emit("    pop bx");
     }
 
-    /// neg instruction
+    /// <summary>
+    /// Handle a negation instruction
+    /// </summary>
+    /// <param name="dest">Destination location</param>
+    /// <param name="right">RHS</param>
     private void Neg(string dest, string right)
     {
         if (TypeHelper.IsNumeric(right))
@@ -534,11 +552,15 @@ public class AssemblyGenerator
         Emit($"    mov {GetAddress(dest)}, ax");
     }
 
-    /// assignment instruction
+    /// <summary>
+    /// Handle an assignment instruction
+    /// </summary>
+    /// <param name="dest">Destination location</param>
+    /// <param name="src">Source location</param>
     private void Ass(string dest, string src)
     {
+        // If source and destination are the same, do nothing. Optimization!
         if (dest == src)
-            /* we don't need to do 'a = a' */
             return;
 
         if (dest == "_AX")
@@ -570,37 +592,47 @@ public class AssemblyGenerator
         }
     }
 
-    /// writestr instruction
-    private void WriteStr(string strname)
+    /// <summary>
+    /// Handle an instruction for writing a string
+    /// </summary>
+    /// <param name="variable">The variable to print</param>
+    private void WriteStr(string variable)
     {
         Emit("    push dx");
-        Emit($"    mov dx, OFFSET _S{strname[2]}");
+        Emit($"    mov dx, OFFSET _S{variable[2]}");
         Emit("    call writestr");
         Emit("    pop dx");
     }
 
-    /// writeint instruction
-    private void WriteInt(string intname)
+    /// <summary>
+    /// Handle an intruction for writing an integer
+    /// </summary>
+    /// <param name="variable">The variable to print</param>
+    private void WriteInt(string variable)
     {
-        if (TypeHelper.IsNumeric(intname))
-            Emit($"    mov ax, {intname}");
-        else
-            Emit($"    mov ax, {GetAddress(intname)}");
+        Emit(TypeHelper.IsNumeric(variable)
+            ? $"    mov ax, {variable}"
+            : $"    mov ax, {GetAddress(variable)}");
         Emit("    call writeint");
     }
 
-    /// writeln instruction
+    /// <summary>
+    /// Handle an instruction for writing a newline
+    /// </summary>
     private void WriteLn()
     {
         Emit("    call writeln");
     }
 
-    /// readint instruction
-    private void ReadInt(string addr)
+    /// <summary>
+    /// Handle an instruction for reading an integer
+    /// </summary>
+    /// <param name="destination">The destination address</param>
+    private void ReadInt(string destination)
     {
         Emit("    push bx");
         Emit("    call readint");
-        Emit($"    mov {GetAddress(addr)}, bx");
+        Emit($"    mov {GetAddress(destination)}, bx");
         Emit("    pop bx");
     }
 }
