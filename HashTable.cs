@@ -217,19 +217,19 @@ public class HashTable
 
                     switch ((int)vtype)
                     {
-                        case (int)Element.VarType.IntType:
+                        case (int)Element.VariableType.Int32:
                             vartype = "int";
                             value = el.GetIntegerValue().ToString();
                             break;
-                        case (int)Element.VarType.CharType:
+                        case (int)Element.VariableType.Char:
                             vartype = "char";
                             value = el.GetCharacterValue().ToString();
                             break;
-                        case (int)Element.VarType.FloatType:
+                        case (int)Element.VariableType.Float:
                             vartype = "float";
                             value = el.GetFloatValue().ToString();
                             break;
-                        case (int)Element.VarType.VoidType:
+                        case (int)Element.VariableType.Void:
                             vartype = "void";
                             value = string.Empty;
                             break;
@@ -246,13 +246,13 @@ public class HashTable
                         case (int)Element.EntryType.VarType:
                             switch ((int)el.Mode)
                             {
-                                case (int)Element.PassingMode.PassOut:
+                                case (int)Element.PassingMode.Output:
                                     output += "out ";
                                     break;
-                                case (int)Element.PassingMode.PassRef:
+                                case (int)Element.PassingMode.Reference:
                                     output += "ref ";
                                     break;
-                                case (int)Element.PassingMode.PassNorm:
+                                case (int)Element.PassingMode.Normal:
                                 default:
                                     break;
                             }
@@ -273,10 +273,10 @@ public class HashTable
 
                             switch ((int)el.GetVType())
                             {
-                                case (int)Element.VarType.IntType:
+                                case (int)Element.VariableType.Int32:
                                     output += $" value:{el.GetIntegerValue()}";
                                     break;
-                                case (int)Element.VarType.FloatType:
+                                case (int)Element.VariableType.Float:
                                     output += $" value:{el.GetFloatValue()}";
                                     break;
                             }
@@ -417,13 +417,13 @@ public class HashTable
                 {
                     switch ((int)search.Mode)
                     {
-                        case (int)Element.PassingMode.PassOut:
+                        case (int)Element.PassingMode.Output:
                             retstr += "out ";
                             break;
-                        case (int)Element.PassingMode.PassRef:
+                        case (int)Element.PassingMode.Reference:
                             retstr += "ref ";
                             break;
-                        case (int)Element.PassingMode.PassNorm:
+                        case (int)Element.PassingMode.Normal:
                         default:
                             break;
                     }
@@ -471,13 +471,13 @@ public class HashTable
                     retstr += " => ";
                     switch ((int)search.Mode)
                     {
-                        case (int)Element.PassingMode.PassOut:
+                        case (int)Element.PassingMode.Output:
                             retstr += "out ";
                             break;
-                        case (int)Element.PassingMode.PassRef:
+                        case (int)Element.PassingMode.Reference:
                             retstr += "ref ";
                             break;
-                        case (int)Element.PassingMode.PassNorm:
+                        case (int)Element.PassingMode.Normal:
                         default:
                             break;
                     }

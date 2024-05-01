@@ -6,7 +6,7 @@ namespace MiniCSharp;
 public class Parameter
 {
     public Element.PassingMode Mode; /* passing mode */
-    public Element.VarType Type; /* type of the variable */
+    public Element.VariableType Type; /* type of the variable */
 
     /// Constructor for the Parameter class
     public Parameter()
@@ -18,8 +18,8 @@ public class Parameter
     public override string ToString() =>
         Mode switch
         {
-            Element.PassingMode.PassRef => "ref",
-            Element.PassingMode.PassOut => "out",
+            Element.PassingMode.Reference => "ref",
+            Element.PassingMode.Output => "out",
             _ => string.Empty
         };
 }
@@ -40,18 +40,18 @@ public class Element
 
     public enum PassingMode
     {
-        PassNorm, /* pass by value */
-        PassRef, /* pass by reference */
-        PassOut /* out mode passing */
+        Normal, /* pass by value */
+        Reference, /* pass by reference */
+        Output /* out mode passing */
     }
 
-    public enum VarType
+    public enum VariableType
     {
-        IntType, /* integer */
-        CharType, /* character */
-        FloatType, /* float */
-        VoidType, /* void */
-        EmptyType /* nada */
+        Int32, /* integer */
+        Char, /* character */
+        Float, /* float */
+        Void, /* void */
+        Empty /* nada */
     }
 
     private Globals.Symbol accessibilityModifier; /* access modifier */
@@ -59,11 +59,11 @@ public class Element
     public string ChildList; /* list of children (if applicable) */
 
     private int depth; /* the depth we are at */
-    private float floatval; /* value - VarType:floatType */
-    private int intval; /* value - VarType:intType */
+    private float floatValue; /* value - VarType:Float */
+    private int integerValue; /* value - VarType:Int32 */
     private string lexeme; /* the element's lexeme */
     public int Location; /* the location it is in a method declaration */
-    public PassingMode Mode; /* passing mode */
+    public PassingMode Mode { get; set; } = PassingMode.Normal; /* passing mode */
     public Element? Next; /* the next element in the list */
 
     private int parameterCount; /* number of parameters - EntryType:methodType */
@@ -72,14 +72,13 @@ public class Element
     private string nameInOffsetNotation; /* variable in offset notation */
 
     public Element? Parent; /* the parent element to a given element */
-    public string childList; /* list of children, parsable format (if applicable) */
     private int sizeOfLocals; /* size of local variables */
     private int sizeOfParameters; /* size of parameters */
 
     private Globals.Symbol token; /* token type */
 
     private EntryType type; /* entry type */
-    public VarType Vtype; /* variable type */
+    public VariableType Type { get; set; } = VariableType.Empty; /* variable type */
 
     /// Constructor for the Element class
     public Element()
@@ -92,16 +91,17 @@ public class Element
     public void InitValues()
     {
         type = EntryType.EmptyType;
-        Vtype = VarType.EmptyType;
-        Mode = PassingMode.PassNorm;
+        Type = VariableType.Empty;
+        Mode = PassingMode.Normal;
         Location = 0;
+        
         SetName("");
         SetToken(Globals.Symbol.Unknown);
         SetOffset(0);
         SetSizeOfLocals(0);
         SetNumParams(0);
+        
         ChildList = string.Empty;
-        childList = string.Empty;
         Parent = null;
     }
 
@@ -114,7 +114,7 @@ public class Element
     /// Set the element to be of type int
     public void SetInteger()
     {
-        Vtype = VarType.IntType;
+        Type = VariableType.Int32;
         SetToken(Globals.Symbol.Int);
         if (type != EntryType.ConstType)
             SetVariable();
@@ -123,7 +123,7 @@ public class Element
     /// Set the element to be of type float
     public void SetFloat()
     {
-        Vtype = VarType.FloatType;
+        Type = VariableType.Float;
         SetToken(Globals.Symbol.Float);
         if (type != EntryType.ConstType)
             SetVariable();
@@ -132,7 +132,7 @@ public class Element
     /// Set the element to be of type char
     public void SetCharacter()
     {
-        Vtype = VarType.CharType;
+        Type = VariableType.Char;
         SetToken(Globals.Symbol.Char);
         if (type != EntryType.ConstType)
             SetVariable();
@@ -150,24 +150,14 @@ public class Element
         type = EntryType.MethodType;
 
         /* set the method's return type */
-        switch ((int)access)
+        Type = (int)access switch
         {
-            case (int)Globals.Symbol.Int:
-                Vtype = VarType.IntType;
-                break;
-            case (int)Globals.Symbol.Char:
-                Vtype = VarType.CharType;
-                break;
-            case (int)Globals.Symbol.Float:
-                Vtype = VarType.FloatType;
-                break;
-            case (int)Globals.Symbol.Void:
-                Vtype = VarType.VoidType;
-                break;
-            default:
-                Vtype = VarType.EmptyType;
-                break;
-        }
+            (int)Globals.Symbol.Int => VariableType.Int32,
+            (int)Globals.Symbol.Char => VariableType.Char,
+            (int)Globals.Symbol.Float => VariableType.Float,
+            (int)Globals.Symbol.Void => VariableType.Void,
+            _ => VariableType.Empty
+        };
     }
 
     /// Set the element to be a class
@@ -186,14 +176,14 @@ public class Element
     /// \param value The value for the object to hold
     public void SetValue(int value)
     {
-        intval = value;
+        integerValue = value;
     }
 
     /// Set the floating point value of the element
     /// \param value The value for the object to hold
     public void SetValue(float value)
     {
-        floatval = value;
+        floatValue = value;
     }
 
     /// Set the character value of the element
@@ -214,14 +204,14 @@ public class Element
     /// \return The value stored in the object
     public int GetIntegerValue()
     {
-        return intval;
+        return integerValue;
     }
 
     /// Get the floating point value of the element
     /// \return The value stored in the object
     public float GetFloatValue()
     {
-        return floatval;
+        return floatValue;
     }
 
     /// Get the character value of the element
@@ -342,8 +332,8 @@ public class Element
 
     /// Get the type of the element
     /// \return VarType of the element
-    public VarType GetVType()
+    public VariableType GetVType()
     {
-        return Vtype;
+        return Type;
     }
 }

@@ -12,13 +12,13 @@ public class StringTable
     public int NumberOfStrings;
 
     /// our array
-    private readonly StringT[] vertArray;
+    private readonly StringT?[] vertArray;
 
     /// Constructor for the string table class
     public StringTable()
     {
         /* allocate space for the hash values */
-        vertArray = new StringT[MaximumStrings];
+        vertArray = new StringT?[MaximumStrings];
         InitTable();
     }
 
@@ -53,9 +53,11 @@ public class StringTable
             insstr = "\" \"";
 
         /* set the new string and add it */
-        var el = new StringT();
-        el.Name = $"_S{NumberOfStrings}";
-        el.String = insstr;
+        var el = new StringT
+        {
+            Name = $"_S{NumberOfStrings}",
+            String = insstr
+        };
         vertArray[NumberOfStrings] = el;
         NumberOfStrings++;
 
@@ -65,10 +67,10 @@ public class StringTable
     /// Search the string table for a specific string.
     /// \param name string name to find
     /// \return a pointer to the desired element, or null
-    public StringT Lookup(string name)
+    public StringT? Lookup(string name)
     {
         /* create a pointer to a StringT */
-        StringT el = null;
+        StringT? el = null;
 
         /* find the string */
         for (var arrayLoc = 0; arrayLoc < NumberOfStrings; arrayLoc++)

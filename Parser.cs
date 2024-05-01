@@ -205,8 +205,6 @@ internal class Parser
                 {
                     parent.ChildList = Globals.SymbolTable.GetChildrenPrint(parent);
                     currentObject.ChildList = Globals.SymbolTable.GetChildrenPrint(currentObject);
-                    parent.childList = Globals.SymbolTable.GetChildren(parent);
-                    currentObject.childList = Globals.SymbolTable.GetChildren(currentObject);
 
                     /* restore the offset */
                     localOffset = parent.GetOffset();
@@ -414,10 +412,10 @@ internal class Parser
         switch ((int)pMode)
         {
             case (int)Globals.Symbol.Ref:
-                e.Mode = Element.PassingMode.PassRef;
+                e.Mode = Element.PassingMode.Reference;
                 break;
             case (int)Globals.Symbol.Out:
-                e.Mode = Element.PassingMode.PassOut;
+                e.Mode = Element.PassingMode.Output;
                 break;
         }
 
@@ -838,16 +836,16 @@ internal class Parser
         switch ((int)type)
         {
             case (int)Globals.Symbol.Char:
-                e.Vtype = Element.VarType.CharType;
+                e.Type = Element.VariableType.Char;
                 break;
             case (int)Globals.Symbol.Int:
-                e.Vtype = Element.VarType.IntType;
+                e.Type = Element.VariableType.Int32;
                 break;
             case (int)Globals.Symbol.Float:
-                e.Vtype = Element.VarType.FloatType;
+                e.Type = Element.VariableType.Float;
                 break;
             default:
-                e.Vtype = Element.VarType.EmptyType;
+                e.Type = Element.VariableType.Empty;
                 break;
         }
 
@@ -1127,13 +1125,13 @@ internal class Parser
                 {
                     switch ((int)e.GetVType())
                     {
-                        case (int)Element.VarType.CharType:
+                        case (int)Element.VariableType.Char:
                             e.SetSizeOfLocals(e.GetSizeOfLocals() + 1);
                             break;
-                        case (int)Element.VarType.IntType:
+                        case (int)Element.VariableType.Int32:
                             e.SetSizeOfLocals(e.GetSizeOfLocals() + 2);
                             break;
-                        case (int)Element.VarType.FloatType:
+                        case (int)Element.VariableType.Float:
                             e.SetSizeOfLocals(e.GetSizeOfLocals() + 4);
                             break;
                     }
@@ -1555,17 +1553,17 @@ internal class Parser
 
                     switch ((int)e.GetVType())
                     {
-                        case (int)Element.VarType.IntType:
+                        case (int)Element.VariableType.Int32:
                             e.SetInteger();
                             mysize = 2;
                             cont = true;
                             break;
-                        case (int)Element.VarType.FloatType:
+                        case (int)Element.VariableType.Float:
                             e.SetFloat();
                             mysize = 4;
                             cont = true;
                             break;
-                        case (int)Element.VarType.CharType:
+                        case (int)Element.VariableType.Char:
                             e.SetCharacter();
                             mysize = 1;
                             cont = true;
@@ -1602,17 +1600,17 @@ internal class Parser
 
                     switch ((int)e.GetVType())
                     {
-                        case (int)Element.VarType.IntType:
+                        case (int)Element.VariableType.Int32:
                             e.SetInteger();
                             mysize = 2;
                             cont = true;
                             break;
-                        case (int)Element.VarType.FloatType:
+                        case (int)Element.VariableType.Float:
                             e.SetFloat();
                             mysize = 4;
                             cont = true;
                             break;
-                        case (int)Element.VarType.CharType:
+                        case (int)Element.VariableType.Char:
                             e.SetCharacter();
                             mysize = 1;
                             cont = true;
@@ -1677,17 +1675,17 @@ internal class Parser
 
                     switch ((int)e.GetVType())
                     {
-                        case (int)Element.VarType.IntType:
+                        case (int)Element.VariableType.Int32:
                             e.SetInteger();
                             mysize = 2;
                             cont = true;
                             break;
-                        case (int)Element.VarType.FloatType:
+                        case (int)Element.VariableType.Float:
                             e.SetFloat();
                             mysize = 4;
                             cont = true;
                             break;
-                        case (int)Element.VarType.CharType:
+                        case (int)Element.VariableType.Char:
                             e.SetCharacter();
                             mysize = 1;
                             cont = true;
