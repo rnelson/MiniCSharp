@@ -3,11 +3,11 @@ namespace MiniCSharp;
 internal class Lexical
 {
     public char Ch; /* current or lookahead char */
-    private readonly FileInfo fs; /* input file stream part 1 */
-    private readonly StreamReader stream; /* input file stream part 2 */
-    private string reader; /* read string from the file stream */
-    private bool haveToken; /* we have a token, stop reading */
-    private bool eof; /* true=eof, false=!eof */
+    private readonly FileInfo _fs; /* input file stream part 1 */
+    private readonly StreamReader _stream; /* input file stream part 2 */
+    private string _reader; /* read string from the file stream */
+    private bool _haveToken; /* we have a token, stop reading */
+    private bool _eof; /* true=eof, false=!eof */
 
     /* Lexical()
      *
@@ -28,7 +28,7 @@ internal class Lexical
     {
         /* set default values */
         CleanUp();
-        eof = false;
+        _eof = false;
 
         /* save the filename */
         Globals.Filename = filename;
@@ -36,8 +36,8 @@ internal class Lexical
         /* open the source file */
         try
         {
-            fs = new FileInfo(filename);
-            stream = fs.OpenText();
+            _fs = new FileInfo(filename);
+            _stream = _fs.OpenText();
         }
         catch
         {
@@ -55,7 +55,7 @@ internal class Lexical
         /* close the source file, set the token to End of File */
         try
         {
-            stream.Close();
+            _stream.Close();
         }
         catch
         {
@@ -120,26 +120,26 @@ internal class Lexical
     public void GetNextToken()
     {
         /* skip comments */
-        if (reader != null)
-            while (Ch == '/' && reader[0] == '/')
+        if (_reader != null)
+            while (Ch == '/' && _reader[0] == '/')
             {
                 GetNextLine();
-                if (reader == null)
+                if (_reader == null)
                     break;
             }
 
         /* clean up the mess */
         CleanUp();
-        eof = false;
+        _eof = false;
 
         /* avoid trying to reference something that doesn't exist */
-        if (reader == null)
+        if (_reader == null)
             GetNextLine();
 
         /* remove leading and trailing whitespace, if possible */
         try
         {
-            reader.Trim();
+            _reader.Trim();
         }
         catch
         {
@@ -147,10 +147,10 @@ internal class Lexical
         }
 
         /* ignore whitespace */
-        while (Ch <= ' ' && !eof) GetNextChar();
+        while (Ch <= ' ' && !_eof) GetNextChar();
 
         /* as long as we read text in, process the token */
-        if (reader != null) ProcessToken();
+        if (_reader != null) ProcessToken();
     }
 
     /* GetNextChar()
@@ -163,7 +163,7 @@ internal class Lexical
         Ch = (char)0;
 
         /* stop if eof */
-        if (eof)
+        if (_eof)
         {
             Globals.Token = Globals.Symbol.Eof;
             return;
@@ -171,7 +171,7 @@ internal class Lexical
 
         /* don't try to access the Length property if we have no string */
         var newLine = false;
-        if (reader == null || reader == string.Empty)
+        if (_reader == null || _reader == string.Empty)
             try
             {
                 GetNextLine();
@@ -183,15 +183,15 @@ internal class Lexical
             }
 
         if (!newLine && Globals.Token != Globals.Symbol.Eof)
-            if (reader != null)
+            if (_reader != null)
             {
-                if (reader.Length > 0)
+                if (_reader.Length > 0)
                 {
                     /* place the next character into `ch` */
-                    Ch = reader[0];
+                    Ch = _reader[0];
 
                     /* remove `ch` from reader */
-                    reader = reader.Substring(1, reader.Length - 1);
+                    _reader = _reader.Substring(1, _reader.Length - 1);
                 }
                 else
                 {
@@ -209,45 +209,45 @@ internal class Lexical
         try
         {
             /* read a line from the file */
-            reader = stream.ReadLine();
+            _reader = _stream.ReadLine();
             Globals.CurLine++;
 
             /* set eof if needed */
-            if (reader == null)
+            if (_reader == null)
             {
-                eof = true;
+                _eof = true;
                 Globals.Token = Globals.Symbol.Eof;
                 return;
             }
 
             /* make sure we don't have a blank line */
-            reader.Trim();
-            while (reader.Length == 0)
+            _reader.Trim();
+            while (_reader.Length == 0)
             {
-                reader = stream.ReadLine();
+                _reader = _stream.ReadLine();
 
-                if (reader == null)
+                if (_reader == null)
                 {
-                    eof = true;
+                    _eof = true;
                     Globals.Token = Globals.Symbol.Eof;
                     return;
                 }
 
-                reader.Trim();
+                _reader.Trim();
             }
 
             /* save the first character */
-            Ch = reader[0];
+            Ch = _reader[0];
 
             /* clear whitespace */
             while (char.IsWhiteSpace(Ch))
             {
-                reader = reader.Substring(1, reader.Length - 1);
-                Ch = reader[0];
+                _reader = _reader.Substring(1, _reader.Length - 1);
+                Ch = _reader[0];
             }
 
             /* remove `ch` from reader */
-            reader = reader.Substring(1, reader.Length - 1);
+            _reader = _reader.Substring(1, _reader.Length - 1);
         }
         catch
         {
@@ -270,7 +270,7 @@ internal class Lexical
      */
     private void ProcessToken()
     {
-        if (haveToken)
+        if (_haveToken)
             return;
 
         if (!char.IsWhiteSpace(Ch))
@@ -306,7 +306,7 @@ internal class Lexical
                     {
                         ProcessComment();
                     }
-                    else if (reader[0] == '/' && Ch == '/')
+                    else if (_reader[0] == '/' && Ch == '/')
                     {
                         ProcessComment();
                     }
@@ -335,7 +335,7 @@ internal class Lexical
     private void ProcessWordToken()
     {
         /* fill lexeme */
-        while ((char.IsLetter(Ch) || char.IsDigit(Ch) || Ch == '_') && !eof)
+        while ((char.IsLetter(Ch) || char.IsDigit(Ch) || Ch == '_') && !_eof)
         {
             Globals.Lexeme += Ch.ToString();
             GetNextChar();
@@ -346,7 +346,7 @@ internal class Lexical
             if (Globals.Lexeme == Globals.ReservedWords[count])
             {
                 Globals.Token = (Globals.Symbol)count;
-                haveToken = true;
+                _haveToken = true;
                 break;
             }
 
@@ -354,7 +354,7 @@ internal class Lexical
         if (Globals.Token == Globals.Symbol.Unknown)
         {
             Globals.Token = Globals.Symbol.Identifier;
-            haveToken = true;
+            _haveToken = true;
         }
     }
 
@@ -369,7 +369,7 @@ internal class Lexical
         var havePeriod = false; /* only allow one decimal point */
 
         /* fill lexeme */
-        while (char.IsDigit(Ch) || (Ch == '.' && !eof))
+        while (char.IsDigit(Ch) || (Ch == '.' && !_eof))
         {
             if (char.IsDigit(Ch) || Ch == '.')
             {
@@ -377,7 +377,7 @@ internal class Lexical
                 if (Ch == '.' && havePeriod)
                 {
                     Globals.Lexeme += Ch;
-                    while ((char.IsDigit(Ch) || Ch == '.') && !eof)
+                    while ((char.IsDigit(Ch) || Ch == '.') && !_eof)
                     {
                         GetNextChar();
                         if (char.IsDigit(Ch) || Ch == '.')
@@ -404,14 +404,14 @@ internal class Lexical
             Globals.Value = 0;
             Globals.ValueF = Convert.ToDouble(Globals.Lexeme);
             Globals.Token = Globals.Symbol.Numfloat;
-            haveToken = true;
+            _haveToken = true;
         }
         else
         {
             Globals.Value = Convert.ToInt32(Globals.Lexeme);
             Globals.ValueF = 0.0;
             Globals.Token = Globals.Symbol.Number;
-            haveToken = true;
+            _haveToken = true;
         }
     }
 
@@ -430,7 +430,7 @@ internal class Lexical
       nothing more has to be done with the line of text we have.
 
       Wipe it out and let a parent function read in the next line. */
-        reader = string.Empty;
+        _reader = string.Empty;
         Globals.Token = Globals.Symbol.Comment;
         GetNextLine();
         GetNextToken();
@@ -448,88 +448,88 @@ internal class Lexical
             case '<':
             case '>':
                 Globals.Token = Globals.Symbol.Relop;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '!':
                 Globals.Token = Globals.Symbol.Unarynot;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '+':
                 Globals.Token = Globals.Symbol.Addop;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '-':
                 Globals.Token = Globals.Symbol.Signop;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '*':
             case '/':
                 Globals.Token = Globals.Symbol.Mulop;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '=':
                 Globals.Token = Globals.Symbol.Assignop;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '(':
                 Globals.Token = Globals.Symbol.Lparen;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case ')':
                 Globals.Token = Globals.Symbol.Rparen;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '{':
                 Globals.Token = Globals.Symbol.Lbrace;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '}':
                 Globals.Token = Globals.Symbol.Rbrace;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '[':
                 Globals.Token = Globals.Symbol.Lbracket;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case ']':
                 Globals.Token = Globals.Symbol.Rbracket;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case ',':
                 Globals.Token = Globals.Symbol.Comma;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case ':':
                 Globals.Token = Globals.Symbol.Colon;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case ';':
                 Globals.Token = Globals.Symbol.Semicolon;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '.':
                 Globals.Token = Globals.Symbol.Period;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '\'':
                 Globals.Token = Globals.Symbol.Quote;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '"':
                 Globals.Token = Globals.Symbol.Dquote;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '&':
                 Globals.Token = Globals.Symbol.Bandop;
-                haveToken = true;
+                _haveToken = true;
                 break;
             case '|':
                 Globals.Token = Globals.Symbol.Borop;
-                haveToken = true;
+                _haveToken = true;
                 break;
             default:
                 Globals.Token = Globals.Symbol.Unknown;
-                haveToken = true;
+                _haveToken = true;
                 break;
         }
     }
@@ -546,24 +546,24 @@ internal class Lexical
                 case '+': case '-': case '/': case '*': case '%':
                     Globals.Token = Globals.Symbol.Assignop;
                     Globals.Lexeme = Globals.Lexeme[0] + Ch.ToString();
-                    haveToken = true;
+                    _haveToken = true;
                     break;
                 case '<': case '>':
                     Globals.Token = Globals.Symbol.Relop;
                     Globals.Lexeme = Globals.Lexeme[0] + Ch.ToString();
-                    haveToken = true;
+                    _haveToken = true;
                     break;
                 case '=': case '!':
                     Globals.Token = Globals.Symbol.Condop;
                     Globals.Lexeme = Globals.Lexeme[0] + Ch.ToString();
-                    haveToken = true;
+                    _haveToken = true;
                     break;
                 case '&':
                     if (Ch == '&')
                     {
                         Globals.Token = Globals.Symbol.Andop;
                         Globals.Lexeme = Globals.Lexeme[0] + Ch.ToString();
-                        haveToken = true;
+                        _haveToken = true;
                     }
                     break;
                 case '|':
@@ -571,7 +571,7 @@ internal class Lexical
                     {
                         Globals.Token = Globals.Symbol.Orop;
                         Globals.Lexeme = Globals.Lexeme[0] + Ch.ToString();
-                        haveToken = true;
+                        _haveToken = true;
                     }
                     break;
                 default:
@@ -581,7 +581,7 @@ internal class Lexical
                         break;
                     }
                     Globals.Token = Globals.Symbol.Unknown;
-                    haveToken = true;
+                    _haveToken = true;
                     break;
             }
         }
@@ -614,7 +614,7 @@ internal class Lexical
             /* get the remainder of literal */
             while (Ch != findMe)
             {
-                if (reader.Length == 0)
+                if (_reader.Length == 0)
                 {
                     Console.WriteLine("warning: {0}:{1}: unterminated literal, expecting {2}", Globals.Filename,
                         Globals.CurLine, findMe);
@@ -650,24 +650,24 @@ internal class Lexical
             Globals.Value = 0;
             Globals.ValueF = 0.0;
             Globals.Literal = string.Empty;
-            haveToken = false;
+            _haveToken = false;
 
             /* fix blank line issue */
-            if (reader == null)
+            if (_reader == null)
             {
                 Globals.Token = Globals.Symbol.Comment;
                 return;
             }
 
-            if (reader == string.Empty)
+            if (_reader == string.Empty)
             {
                 Globals.Token = Globals.Symbol.Comment;
                 return;
             }
 
-            if (reader[0] == '/' && reader[1] == '/')
+            if (_reader[0] == '/' && _reader[1] == '/')
             {
-                reader = string.Empty;
+                _reader = string.Empty;
                 Globals.Token = Globals.Symbol.Comment;
             }
         }

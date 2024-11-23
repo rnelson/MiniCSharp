@@ -9,13 +9,13 @@ public class HashTable
     private const uint PrimeNumber = 50333;
 
     /// The array holding pointers to Element objects
-	private readonly Element?[] vertArray;
+	private readonly Element?[] _vertArray;
 
 	/// Constructor for the hash table class
 	public HashTable()
     {
         /* allocate space for the hash values */
-        vertArray = new Element?[PrimeNumber];
+        _vertArray = new Element?[PrimeNumber];
         InitTable();
     }
 
@@ -23,7 +23,7 @@ public class HashTable
 	public void InitTable()
     {
         for (var i = 0; i < PrimeNumber; i++)
-            vertArray[i] = null;
+            _vertArray[i] = null;
     }
 
 	/// Completely remove a depth from the hash table
@@ -39,7 +39,7 @@ public class HashTable
 
         for (var loc = 0; loc < PrimeNumber; loc++)
         {
-            var e = vertArray[loc];
+            var e = _vertArray[loc];
 
             /* if there's something there, check the depth */
             if (e != null)
@@ -54,8 +54,8 @@ public class HashTable
                 /* if the depth is the same, remove the node */
                 while (e.GetDepth() == depth)
                 {
-                    vertArray[loc] = e.Next; /* remove the head node */
-                    e = vertArray[loc]; /* reset e to the front of that linked list */
+                    _vertArray[loc] = e.Next; /* remove the head node */
+                    e = _vertArray[loc]; /* reset e to the front of that linked list */
 
                     if (e == null || e.Next == null)
                         break;
@@ -113,16 +113,16 @@ public class HashTable
         /* add the node */
         try
         {
-            var oldHead = vertArray[arrayLoc];
+            var oldHead = _vertArray[arrayLoc];
             el.Next = oldHead;
-            vertArray[arrayLoc] = el;
+            _vertArray[arrayLoc] = el;
 
             if (haveConst)
                 el.SetConstant();
         }
         catch
         {
-            vertArray[arrayLoc] = el;
+            _vertArray[arrayLoc] = el;
 
             if (haveConst)
                 el.SetConstant();
@@ -143,13 +143,13 @@ public class HashTable
         var arrayLoc = Hash(lexeme);
 
         /* find the node */
-        if (vertArray[arrayLoc] == null)
+        if (_vertArray[arrayLoc] == null)
         {
             el = null;
         }
         else
         {
-            el = vertArray[arrayLoc];
+            el = _vertArray[arrayLoc];
 
             /* if needed (collisions), traverse the list to find the element */
             while (el.GetName() != lexeme)
@@ -177,7 +177,7 @@ public class HashTable
         Element? el;
 
         /* print out the values */
-        foreach (var e in vertArray)
+        foreach (var e in _vertArray)
         {
             el = e;
 
@@ -334,7 +334,7 @@ public class HashTable
         var retval = 0;
         Element? search = null;
 
-        foreach (var el in vertArray)
+        foreach (var el in _vertArray)
         {
             search = el;
 
@@ -357,7 +357,7 @@ public class HashTable
         var retval = 0;
         Element? search = null;
 
-        foreach (var el in vertArray)
+        foreach (var el in _vertArray)
         {
             search = el;
 
@@ -381,7 +381,7 @@ public class HashTable
         var retval = string.Empty;
         Element? search = null;
 
-        foreach (var el in vertArray)
+        foreach (var el in _vertArray)
         {
             search = el;
 
@@ -409,7 +409,7 @@ public class HashTable
         var retstr = string.Empty;
         Element? search = null;
 
-        foreach (var elem in vertArray)
+        foreach (var elem in _vertArray)
         {
             search = elem;
 
@@ -462,7 +462,7 @@ public class HashTable
         var retstr = "\n";
         Element? search = null;
 
-        foreach (var elem in vertArray)
+        foreach (var elem in _vertArray)
         {
             search = elem;
 

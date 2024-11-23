@@ -5,93 +5,93 @@ namespace MiniCSharp;
 internal class Parser
 {
     /// the size of the local variables in a class
-    private int classSize;
+    private int _classSize;
 
     /// the most recently inserted object (for setting parent)
-    private Element? currentObject;
+    private Element? _currentObject;
 
     /// the class that we're in
-    private Element? currentClass;
+    private Element? _currentClass;
 
     /// the method that we're in
-    private Element? currentMethod;
+    private Element? _currentMethod;
 
     /// we found Main() -- error if not
-    private bool foundMain;
+    private bool _foundMain;
 
     /// the size of local variables in a method
-    private int functionLocalsSize;
+    private int _functionLocalsSize;
 
     /// keep track of whether we're doing a method -- depth changes
-    private bool incAtBrace;
+    private bool _incAtBrace;
 
     /// are we inside an ( Expr ) sequence?
-    private bool isInExpression;
+    private bool _isInExpression;
 
     /// are we in ParamList? (used with varLoc)
-    private bool isInParameterList;
+    private bool _isInParameterList;
 
     /// keep track of whether an identifier is a method
-    private bool isInFunction;
+    private bool _isInFunction;
 
     /// a lexical analyzer object
-    private readonly Lexical lex;
+    private readonly Lexical _lex;
 
     /// the current offset (for a given block)
-    private int localOffset;
+    private int _localOffset;
 
     /// minimum offset in the current block
-    private int minOffset;
+    private int _minOffset;
 
     /// we are in Main()
-    private bool nowMain;
+    private bool _nowMain;
 
     /// the offset multiplier (to get negative values)
-    private int offsetmul;
+    private int _offsetmul;
 
     /// the current parent object (if applicable)
-    private Element? parent;
+    private Element? _parent;
 
     /// START instruction for TAC
-    private string tacStartInstruction;
+    private string _tacStartInstruction;
 
     /// TAC stream
-    private readonly StreamWriter tacStreamWriter;
+    private readonly StreamWriter _tacStreamWriter;
 
     /// the location of a parameter
-    private int varLoc;
+    private int _varLoc;
 
     /// The parser's contructor, which sets some default values
     /// and opens up the passed in filename
     /// \param filename the file to open
     public Parser(string filename)
     {
-        lex = new Lexical(filename);
-        lex.GetNextToken();
+        _lex = new Lexical(filename);
+        _lex.GetNextToken();
 
         /* give the class-scope variables some real values */
-        incAtBrace = true;
-        isInFunction = false;
-        isInParameterList = false;
-        foundMain = false;
-        nowMain = false;
-        functionLocalsSize = 0;
-        classSize = 0;
-        varLoc = 0;
-        parent = null;
-        currentObject = null;
-        currentClass = null;
-        localOffset = 2;
-        offsetmul = -1;
-        minOffset = 0;
+        _incAtBrace = true;
+        _isInFunction = false;
+        _isInParameterList = false;
+        _foundMain = false;
+        _nowMain = false;
+        _functionLocalsSize = 0;
+        _classSize = 0;
+        _varLoc = 0;
+        _parent = null;
+        _currentObject = null;
+        _currentClass = null;
+        _localOffset = 2;
+        _offsetmul = -1;
+        _minOffset = 0;
 
         /* don't forget the three-address-code stuff */
-        tacStartInstruction = string.Empty;
-        isInExpression = false;
+        _tacStartInstruction = string.Empty;
+        _isInExpression = false;
 
         /* open the TAC file */
         var tacFilestream = new FileStream($"{Globals.GetFilename(Globals.Filename, '.')}.tac", FileMode.Create);
-        tacStreamWriter = new StreamWriter(tacFilestream, Encoding.UTF8);
+        _tacStreamWriter = new StreamWriter(tacFilestream, Encoding.UTF8);
 
         /* run the function for the first grammar rule */
         Prog();
@@ -99,13 +99,13 @@ internal class Parser
         /* flush the StreamWriter buffer and close the files */
         try
         {
-            tacStreamWriter.Write(tacStartInstruction);
+            _tacStreamWriter.Write(_tacStartInstruction);
 
             if (Globals.Visual)
-                Console.WriteLine(tacStartInstruction);
+                Console.WriteLine(_tacStartInstruction);
 
-            tacStreamWriter.Flush();
-            tacStreamWriter.Close();
+            _tacStreamWriter.Flush();
+            _tacStreamWriter.Close();
             tacFilestream.Close();
         }
         catch
@@ -172,60 +172,60 @@ internal class Parser
             /* increase/decrease the depth as needed */
             if (desired == Globals.Symbol.Lbrace)
             {
-                if (incAtBrace)
+                if (_incAtBrace)
                 {
                     Globals.Depth++;
-                    parent = currentObject;
-                    localOffset = 2;
-                    offsetmul = -1;
-                    functionLocalsSize = 0;
+                    _parent = _currentObject;
+                    _localOffset = 2;
+                    _offsetmul = -1;
+                    _functionLocalsSize = 0;
                 }
                 else
                 {
-                    incAtBrace = true;
+                    _incAtBrace = true;
                 }
             }
             else if (desired == Globals.Symbol.Lparen)
             {
-                incAtBrace = false;
-                parent = currentObject;
+                _incAtBrace = false;
+                _parent = _currentObject;
                 Globals.Depth++;
-                localOffset = 4;
-                offsetmul = 1;
-                functionLocalsSize = 0;
+                _localOffset = 4;
+                _offsetmul = 1;
+                _functionLocalsSize = 0;
             }
             else if (desired == Globals.Symbol.Rparen)
             {
-                isInParameterList = false;
+                _isInParameterList = false;
             }
             else if (desired == Globals.Symbol.Rbrace)
             {
                 /* save the child lists */
                 try
                 {
-                    parent.ChildList = Globals.SymbolTable.GetChildrenPrint(parent);
-                    currentObject.ChildList = Globals.SymbolTable.GetChildrenPrint(currentObject);
+                    _parent.ChildList = Globals.SymbolTable.GetChildrenPrint(_parent);
+                    _currentObject.ChildList = Globals.SymbolTable.GetChildrenPrint(_currentObject);
 
                     /* restore the offset */
-                    localOffset = parent.GetOffset();
+                    _localOffset = _parent.GetOffset();
 
                     /* save the method/class size */
-                    functionLocalsSize = 0;
+                    _functionLocalsSize = 0;
 
                     /* unset currentclass if needed */
-                    if (currentClass == parent)
-                        currentClass = null;
+                    if (_currentClass == _parent)
+                        _currentClass = null;
 
                     /* do the same with currentmethod */
-                    currentMethod = null;
+                    _currentMethod = null;
 
                     /* kill this depth */
                     Globals.SymbolTable.DeleteDepth(Globals.Depth);
                     Globals.Depth--;
 
                     /* go up a level for parent */
-                    if (currentObject != null)
-                        parent = parent.Parent;
+                    if (_currentObject != null)
+                        _parent = _parent.Parent;
                 }
                 catch
                 {
@@ -238,21 +238,21 @@ internal class Parser
                 if (Globals.Lexeme == "Main")
                 {
                     /* this bug should be fixed.  if we hit this, something went wrong. */
-                    foundMain = true;
+                    _foundMain = true;
 
                     /* save the TAC START line */
-                    tacStartInstruction = "START BROKEN_READ.Main";
+                    _tacStartInstruction = "START BROKEN_READ.Main";
                 }
             }
 
             if (desired != Globals.Symbol.Eof)
-                lex.GetNextToken();
+                _lex.GetNextToken();
         }
         else if (Globals.Token == Globals.Symbol.Comment)
         {
             if (desired != Globals.Symbol.Eof)
             {
-                lex.GetNextToken();
+                _lex.GetNextToken();
                 Match(desired);
             }
         }
@@ -270,11 +270,11 @@ internal class Parser
 
         if (desired == Globals.Lexeme)
         {
-            lex.GetNextToken();
+            _lex.GetNextToken();
         }
         else if (Globals.Lexeme[..2] == "//")
         {
-            lex.GetNextToken();
+            _lex.GetNextToken();
             Match(desired);
         }
         else
@@ -288,19 +288,19 @@ internal class Parser
     private Element? Newtemp()
     {
         /* find the next minimum offset */
-        minOffset = Globals.SymbolTable.GetMinOffset();
-        minOffset -= 2;
+        _minOffset = Globals.SymbolTable.GetMinOffset();
+        _minOffset -= 2;
 
         /* get a logical name for the next temporary variable */
         var tName = "_BP";
-        tName += minOffset < 0 ? minOffset.ToString() : $"-{minOffset}";
+        tName += _minOffset < 0 ? _minOffset.ToString() : $"-{_minOffset}";
 
         /* create and return the new element */
         var e = AddSymbol(Globals.Symbol.Unknown, Globals.Symbol.Private, Globals.Symbol.Int, Globals.Symbol.Int, tName,
             Globals.Depth);
 
         /* make sure the temporary has the right offset */
-        e.SetOffset(minOffset);
+        e.SetOffset(_minOffset);
 
         return e;
     }
@@ -310,7 +310,7 @@ internal class Parser
     private void Emit(string text)
     {
         /* add the line to the TAC file */
-        tacStreamWriter.Write(text);
+        _tacStreamWriter.Write(text);
 
         /* print the line to the screen if requested */
         if (Globals.Visual)
@@ -352,13 +352,13 @@ internal class Parser
                 Error($"error: duplicate symbol \"{lexeme}\" found on line {Globals.CurLine}");
 
         e = Globals.SymbolTable.Insert(lexeme, type, depth);
-        currentObject = e;
+        _currentObject = e;
 
         /* set the access */
         e.SetAccess(accMod);
 
         /* set the type and size */
-        if (!isInFunction)
+        if (!_isInFunction)
         {
             switch ((int)type)
             {
@@ -377,14 +377,14 @@ internal class Parser
                 case (int)Globals.Symbol.Class:
                     e.SetClass();
                     mysize = 0;
-                    currentClass = e;
+                    _currentClass = e;
                     break;
             }
 
-            if (token != Globals.Symbol.Const && !isInParameterList)
+            if (token != Globals.Symbol.Const && !_isInParameterList)
             {
                 e.SetSizeOfLocals(mysize);
-                functionLocalsSize += mysize;
+                _functionLocalsSize += mysize;
             }
         }
         else /* we are dealing with a method */
@@ -405,7 +405,7 @@ internal class Parser
                     break;
             }
 
-            isInFunction = false;
+            _isInFunction = false;
         }
 
         /* set the passing mode (if specified) */
@@ -420,31 +420,31 @@ internal class Parser
         }
 
         /* stay in touch with your folks! */
-        e.Parent = parent;
+        e.Parent = _parent;
 
         if (token != Globals.Symbol.Const)
         {
             /* update the local variable size for classes */
-            if (parent != null)
-                if (parent.GetEntryType() == Element.EntryType.Class)
+            if (_parent != null)
+                if (_parent.GetEntryType() == Element.EntryType.Class)
                 {
-                    classSize += mysize;
-                    if (currentObject.GetEntryType() == Element.EntryType.Method)
-                        currentMethod = currentObject;
+                    _classSize += mysize;
+                    if (_currentObject.GetEntryType() == Element.EntryType.Method)
+                        _currentMethod = _currentObject;
                 }
-                else if (parent.GetEntryType() == Element.EntryType.Method)
+                else if (_parent.GetEntryType() == Element.EntryType.Method)
                 {
-                    if (!isInParameterList)
-                        parent.SetSizeOfLocals(parent.GetSizeOfLocals() + mysize);
+                    if (!_isInParameterList)
+                        _parent.SetSizeOfLocals(_parent.GetSizeOfLocals() + mysize);
                 }
 
             /* update the offset */
-            e.SetOffset(localOffset);
-            localOffset += mysize * offsetmul;
+            e.SetOffset(_localOffset);
+            _localOffset += mysize * _offsetmul;
 
             /* update minOffset */
-            if (e.GetOffset() < minOffset)
-                minOffset = e.GetOffset();
+            if (e.GetOffset() < _minOffset)
+                _minOffset = e.GetOffset();
         }
         else
         {
@@ -452,22 +452,22 @@ internal class Parser
         }
 
         /* set the parameter location (or 0) */
-        if (!isInParameterList)
+        if (!_isInParameterList)
         {
-            varLoc = 0;
+            _varLoc = 0;
         }
         else
         {
-            varLoc++;
-            if (parent != null)
-                parent.SetNumParams(varLoc);
+            _varLoc++;
+            if (_parent != null)
+                _parent.SetNumParams(_varLoc);
         }
 
         /* set the parameter number (or 0) */
-        e.Location = varLoc;
+        e.Location = _varLoc;
 
         /* make sure isFunc is false so we don't consider a variable inside a method to be a method */
-        isInFunction = false;
+        _isInFunction = false;
 
         return e;
     }
@@ -686,7 +686,7 @@ internal class Parser
     {
         Globals.Symbol accMod, type = Globals.Symbol.Class;
         var dep = Globals.Depth;
-        classSize = 0;
+        _classSize = 0;
 
         AccessModifier(out accMod);
         Match(Globals.Symbol.Class);
@@ -706,7 +706,7 @@ internal class Parser
         Match(Globals.Symbol.Rbrace);
 
         /* set the class's size */
-        c.SetSizeOfLocals(classSize);
+        c.SetSizeOfLocals(_classSize);
     }
 
     /// Implements the grammar rule: ClassOrNamespace -> [idt] ClassOrNamespaceTail
@@ -734,8 +734,8 @@ internal class Parser
         Globals.Symbol accMod, type = Globals.Symbol.Unknown;
         string? idt;
 
-        localOffset = 4;
-        offsetmul = 1;
+        _localOffset = 4;
+        _offsetmul = 1;
 
         switch ((int)Globals.Token)
         {
@@ -759,7 +759,7 @@ internal class Parser
       added to the symbol table (current.lexeme).
 
      */
-                    if (currentClass.GetName() == Globals.Lexeme)
+                    if (_currentClass.GetName() == Globals.Lexeme)
                     {
                         type = Globals.Symbol.Constructor;
                         ConstructorDecl(accMod);
@@ -806,17 +806,17 @@ internal class Parser
                     Emit("PROC " + m.Parent.GetName() + "." + m.GetName() + "\n");
 
                     Match(Globals.Symbol.Lparen);
-                    localOffset = 4;
-                    offsetmul = 1;
+                    _localOffset = 4;
+                    _offsetmul = 1;
                     ParamList();
                     Match(Globals.Symbol.Rparen);
                     Match(Globals.Symbol.Lbrace);
-                    localOffset = -2;
-                    offsetmul = -1;
-                    isInFunction = false;	/* off to bigger and better identifiers! */
+                    _localOffset = -2;
+                    _offsetmul = -1;
+                    _isInFunction = false;	/* off to bigger and better identifiers! */
                 IdentifierList();
                 StatList();
-                ReturnLine(nowMain);
+                ReturnLine(_nowMain);
                 Match(Globals.Symbol.Rbrace);
 
                 Emit($"ENDP {m.Parent.GetName()}.{m.GetName()}\n");
@@ -883,20 +883,20 @@ internal class Parser
         Emit($"PROC {c.Parent.GetName()}.{c.GetName()}\n");
         Match(Globals.Symbol.Identifier);
         Match(Globals.Symbol.Lparen);
-        localOffset = 4;
-        offsetmul = 1;
+        _localOffset = 4;
+        _offsetmul = 1;
         ParamList();
         Match(Globals.Symbol.Rparen);
         Match(Globals.Symbol.Lbrace);
-        localOffset = -2;
-        offsetmul = -1;
+        _localOffset = -2;
+        _offsetmul = -1;
         IdentifierList();
         StatList();
 
         /* set the constructor's size */
         c.SetMethod(accMod);
         c.SetSizeOfLocals(Globals.SymbolTable.GetDepthSize(Globals.Depth));
-        classSize += c.GetSizeOfLocals();
+        _classSize += c.GetSizeOfLocals();
 
         Match(Globals.Symbol.Rbrace);
         Emit($"ENDP {c.Parent.GetName()}.{c.GetName()}\n");
@@ -943,16 +943,16 @@ internal class Parser
                 break;
             case (int)Globals.Symbol.Lparen:
                 /* store the offsets, matching lparen resets them */
-                int lo = localOffset, om = offsetmul;
+                int lo = _localOffset, om = _offsetmul;
                 Match(Globals.Symbol.Lparen);
 
                 /* resetore the offsets */
-                localOffset = lo;
-                offsetmul = om;
+                _localOffset = lo;
+                _offsetmul = om;
 
-                isInExpression = true;
+                _isInExpression = true;
                 Expr("", out mylex);
-                isInExpression = false;
+                _isInExpression = false;
                 Match(Globals.Symbol.Rparen);
                 break;
             case (int)Globals.Symbol.Unarynot:
@@ -1023,7 +1023,7 @@ internal class Parser
         }
         else
         {
-            if (currentClass.GetName() == Globals.Lexeme)
+            if (_currentClass.GetName() == Globals.Lexeme)
             {
                 type = Globals.Symbol.Constructor;
                 ConstructorDecl(accMod);
@@ -1032,22 +1032,22 @@ internal class Parser
             {
                 Type(out type);
                 Idt(accMod, type);
-                var e = currentObject;
+                var e = _currentObject;
 
                 if (Globals.Token == Globals.Symbol.Lparen)
                 {
                     Emit($"PROC {e.Parent.GetName()}.{e.GetName()}\n");
                     Match(Globals.Symbol.Lparen);
-                    localOffset = 4;
-                    offsetmul = 1;
+                    _localOffset = 4;
+                    _offsetmul = 1;
                     ParamList();
                     Match(Globals.Symbol.Rparen);
                     Match(Globals.Symbol.Lbrace);
-                    localOffset = 2;
-                    offsetmul = -1;
+                    _localOffset = 2;
+                    _offsetmul = -1;
                     IdentifierList();
                     StatList();
-                    ReturnLine(nowMain);
+                    ReturnLine(_nowMain);
                     Match(Globals.Symbol.Rbrace);
                     Emit($"ENDP {e.Parent.GetName()}.{e.GetName()}\n");
                 }
@@ -1136,7 +1136,7 @@ internal class Parser
                             break;
                     }
 
-                    functionLocalsSize += e.GetSizeOfLocals();
+                    _functionLocalsSize += e.GetSizeOfLocals();
                 }
 
                 Match(Globals.Symbol.Identifier);
@@ -1144,10 +1144,10 @@ internal class Parser
                 /* cheat and see if we have a method coming */
                 if (Globals.Token == Globals.Symbol.Lparen)
                 {
-                    isInFunction = true;
+                    _isInFunction = true;
                     e.SetMethod(type);
                     e.SetSizeOfLocals(0);
-                    currentMethod = e;
+                    _currentMethod = e;
                 }
                 else
                 {
@@ -1231,28 +1231,28 @@ internal class Parser
         }
         else if (Globals.Lexeme == "Main")
         {
-            Emit($"PROC {currentClass.GetName()}.Main\n");
+            Emit($"PROC {_currentClass.GetName()}.Main\n");
 
             var main = AddSymbol(Globals.Symbol.Unknown, Globals.Symbol.Unknown, Globals.Symbol.Void,
                 Globals.Symbol.Void, "Main", Globals.Depth);
-            main.Parent = currentClass;
+            main.Parent = _currentClass;
 
             Match("Main");
-            foundMain = true; /* we found it! */
-            nowMain = true; /* hello! */
+            _foundMain = true; /* we found it! */
+            _nowMain = true; /* hello! */
 
             /* save the TAC START line */
-            tacStartInstruction = $"START {currentClass.GetName()}.Main";
+            _tacStartInstruction = $"START {_currentClass.GetName()}.Main";
 
             Match(Globals.Symbol.Lparen);
             Match(Globals.Symbol.Rparen);
             Match(Globals.Symbol.Lbrace);
-            localOffset = -2;
-            offsetmul = -1;
+            _localOffset = -2;
+            _offsetmul = -1;
             IdentifierList();
             StatList();
-            nowMain = false; /* we're done with Main() */
-            Emit($"ENDP {currentClass.GetName()}.Main\n");
+            _nowMain = false; /* we're done with Main() */
+            Emit($"ENDP {_currentClass.GetName()}.Main\n");
         }
         else if (Globals.Token == Globals.Symbol.Comma)
         {
@@ -1459,7 +1459,7 @@ internal class Parser
                 break;
             default:
                 rightLexeme = string.Empty;
-                if (isInExpression)
+                if (_isInExpression)
                     rightLexeme = leftLexeme;
                 addchar = string.Empty;
                 break;
@@ -1543,7 +1543,7 @@ internal class Parser
         Element? e = null;
 
         /* start updating varLoc */
-        isInParameterList = true;
+        _isInParameterList = true;
 
         switch ((int)Globals.Token)
         {
@@ -1582,11 +1582,11 @@ internal class Parser
                     if (cont)
                     {
                         e.SetSizeOfLocals(mysize);
-                        e.SetOffset(localOffset * offsetmul - mysize * offsetmul);
-                        e.Parent = parent;
+                        e.SetOffset(_localOffset * _offsetmul - mysize * _offsetmul);
+                        e.Parent = _parent;
 
-                        functionLocalsSize += mysize;
-                        localOffset += mysize * offsetmul;
+                        _functionLocalsSize += mysize;
+                        _localOffset += mysize * _offsetmul;
                     }
                 }
 
@@ -1631,16 +1631,16 @@ internal class Parser
                         // we don't want to count parameters towards locals
                         //e.SetSizeOfLocals(mysize);
 
-                        e.Parent = parent;
+                        e.Parent = _parent;
 
-                        if (e.Parent.GetName() == currentClass.GetName())
-                            e.SetOffset(localOffset * offsetmul - mysize * offsetmul);
+                        if (e.Parent.GetName() == _currentClass.GetName())
+                            e.SetOffset(_localOffset * _offsetmul - mysize * _offsetmul);
                         else
-                            e.SetOffset(localOffset * offsetmul);
+                            e.SetOffset(_localOffset * _offsetmul);
 
-                        functionLocalsSize += mysize;
-                        if (e.Parent.GetName() != currentClass.GetName())
-                            localOffset += mysize * offsetmul;
+                        _functionLocalsSize += mysize;
+                        if (e.Parent.GetName() != _currentClass.GetName())
+                            _localOffset += mysize * _offsetmul;
 
                         if (e.Parent.GetEntryType() == Element.EntryType.Method)
                             e.Parent.SetSizeOfParams(e.Parent.GetSizeOfParams() + mysize);
@@ -1660,7 +1660,7 @@ internal class Parser
         }
 
         /* done! this should already by unset */
-        isInParameterList = false;
+        _isInParameterList = false;
     }
 
     /// Implements the grammar rule: ParamTail -> [,] Mode Type [idt] ParamTail | lambda
@@ -1704,18 +1704,18 @@ internal class Parser
                     /* if we hit a real variable, set properties */
                     if (cont)
                     {
-                        if (!isInParameterList)
+                        if (!_isInParameterList)
                             e.SetSizeOfLocals(mysize);
-                        e.Parent = parent;
+                        e.Parent = _parent;
 
-                        if (e.Parent.GetName() == currentClass.GetName())
-                            e.SetOffset(localOffset * offsetmul - mysize * offsetmul);
+                        if (e.Parent.GetName() == _currentClass.GetName())
+                            e.SetOffset(_localOffset * _offsetmul - mysize * _offsetmul);
                         else
-                            e.SetOffset(localOffset * offsetmul);
+                            e.SetOffset(_localOffset * _offsetmul);
 
-                        functionLocalsSize += mysize;
-                        if (e.Parent.GetName() != currentClass.GetName())
-                            localOffset += mysize * offsetmul;
+                        _functionLocalsSize += mysize;
+                        if (e.Parent.GetName() != _currentClass.GetName())
+                            _localOffset += mysize * _offsetmul;
 
                         if (e.Parent.GetEntryType() == Element.EntryType.Method)
                             e.Parent.SetSizeOfParams(e.Parent.GetSizeOfParams() + mysize);
@@ -1808,7 +1808,7 @@ internal class Parser
         Match(Globals.Symbol.Eof);
 
         // if we hit EOF and didn't find Main(), error -- we don't support multiple source files
-        if (!foundMain)
+        if (!_foundMain)
             Error("error: Main() not found in " + Globals.Filename);
     }
 

@@ -8,29 +8,29 @@ namespace MiniCSharp;
 /// </summary>
 public class AssemblyGenerator
 {
-    private readonly FileStream outputFileStream;
-    private readonly StreamWriter outputFileWriter;
-    private readonly StreamReader inputFileReader;
-    private readonly HashTable symbols;
-    private readonly StringTable strings;
-    private List<string?> tokens;
-    private int tacTokenCount;
-    private string? reader;
+    private readonly FileStream _outputFileStream;
+    private readonly StreamWriter _outputFileWriter;
+    private readonly StreamReader _inputFileReader;
+    private readonly HashTable _symbols;
+    private readonly StringTable _strings;
+    private List<string?> _tokens;
+    private int _tacTokenCount;
+    private string? _reader;
 
     public AssemblyGenerator(string filename, HashTable symbolTable, StringTable stringTable)
     {
-        symbols = symbolTable;
-        strings = stringTable;
-        tokens = new List<string?>();
+        _symbols = symbolTable;
+        _strings = stringTable;
+        _tokens = [];
 
         // Open the input file
         var outputFileInfo = new FileInfo($"{Globals.GetFilename(Globals.Filename, '.')}.tac");
-        inputFileReader = outputFileInfo.OpenText();
+        _inputFileReader = outputFileInfo.OpenText();
 
         // Open the output file
         var assemblyFile = $"{Globals.GetFilename(filename, '.')}.s";
-        outputFileStream = new FileStream(assemblyFile, FileMode.Create);
-        outputFileWriter = new StreamWriter(outputFileStream, Encoding.ASCII);
+        _outputFileStream = new FileStream(assemblyFile, FileMode.Create);
+        _outputFileWriter = new StreamWriter(_outputFileStream, Encoding.ASCII);
 
         // Get an initial set of tokens
         GetTokens();
@@ -44,11 +44,11 @@ public class AssemblyGenerator
     {
         if (text.Length > 8)
         {
-            outputFileWriter.Write(text[..9] == "      end" ? text : $"{text}\n");
+            _outputFileWriter.Write(text[..9] == "      end" ? text : $"{text}\n");
         }
         else
         {
-            outputFileWriter.Write($"{text}\n");
+            _outputFileWriter.Write($"{text}\n");
         }
     }
 
@@ -58,20 +58,20 @@ public class AssemblyGenerator
     /// <returns><c>true</c> if tokens were found, else <c>false</c></returns>
     private bool GetTokens()
     {
-        reader = null;
-        tokens = [];
+        _reader = null;
+        _tokens = [];
 
         // Skip over blank lines
-        while (reader?.Length == 0)
+        while (_reader?.Length == 0)
         {
-            reader = inputFileReader.ReadLine()?.Trim() ?? null;
+            _reader = _inputFileReader.ReadLine()?.Trim() ?? null;
 
-            if (reader == null)
+            if (_reader == null)
                 return false;
         }
 
-        tokens = reader!.Split().ToList();
-        tacTokenCount = tokens.Count;
+        _tokens = _reader!.Split().ToList();
+        _tacTokenCount = _tokens.Count;
         return true;
     }
 
@@ -112,7 +112,7 @@ public class AssemblyGenerator
             .Unpack(out var sMethod);
 
         // Find the method and return it or null
-        var element = symbols.Lookup(sMethod);
+        var element = _symbols.Lookup(sMethod);
         if (element is null)
             return null;
 
@@ -137,10 +137,10 @@ public class AssemblyGenerator
         Start();
 
         // Close open streams
-        outputFileWriter.Flush();
-        outputFileWriter.Close();
-        outputFileStream.Close();
-        inputFileReader.Close();
+        _outputFileWriter.Flush();
+        _outputFileWriter.Close();
+        _outputFileStream.Close();
+        _inputFileReader.Close();
     }
 
     /// <summary>
@@ -164,9 +164,9 @@ public class AssemblyGenerator
         Emit("    .data");
 
         // Add all strings
-        for (var sc = 0; sc < strings.Count; sc++)
+        for (var sc = 0; sc < _strings.Count; sc++)
         {
-            var st = strings.Lookup($"_S{sc}");
+            var st = _strings.Lookup($"_S{sc}");
 
             // Sanitize the string we don't deal with escaped characters anywhere in the lexical analyzer so this isn't an issue, but it's good to have in there
             var str = st.String?
@@ -177,7 +177,7 @@ public class AssemblyGenerator
         }
 
         // Print out class-scope variables
-        Emit(symbols.GenerateAssemblyData(1));
+        Emit(_symbols.GenerateAssemblyData(1));
         Emit("    ");
     }
 
@@ -196,11 +196,11 @@ public class AssemblyGenerator
     /// </summary>
     private void Procedures()
     {
-        var t1 = tokens[0] ?? null;
-        var t2 = tokens[1] ?? null;
-        var t3 = tokens[2] ?? null;
-        var t4 = tokens[3] ?? null;
-        var t5 = tokens[4] ?? null;
+        var t1 = _tokens[0] ?? null;
+        var t2 = _tokens[1] ?? null;
+        var t3 = _tokens[2] ?? null;
+        var t4 = _tokens[3] ?? null;
+        var t5 = _tokens[4] ?? null;
 
         if ("START" == t1)
             return;
@@ -281,7 +281,7 @@ public class AssemblyGenerator
                 break;
             default:
                 // Figure out what kind of statement we have
-                if (tacTokenCount == 5)
+                if (_tacTokenCount == 5)
                 {
                     switch (t4)
                     {
@@ -298,11 +298,11 @@ public class AssemblyGenerator
                             Mul(t1, t3, t5);
                             break;
                         default:
-                            Console.WriteLine("Oops, unexpected situation: {0}", reader);
+                            Console.WriteLine("Oops, unexpected situation: {0}", _reader);
                             break;
                     }
                 }
-                else if (tacTokenCount == 4)
+                else if (_tacTokenCount == 4)
                 {
                     switch (t3)
                     {
@@ -310,18 +310,18 @@ public class AssemblyGenerator
                             Neg(t1, t4);
                             break;
                         default:
-                            Console.Error.WriteLine("Oops, unexpected situation: {0}", reader);
+                            Console.Error.WriteLine("Oops, unexpected situation: {0}", _reader);
                             break;
                     }
                 }
-                else if (tacTokenCount == 3)
+                else if (_tacTokenCount == 3)
                 {
                     Ass(t1, t3);
                 }
                 else
                 {
-                    if (reader?.Length > 0)
-                        Console.Error.WriteLine("Oops, unexpected situation: {0}", reader);
+                    if (_reader?.Length > 0)
+                        Console.Error.WriteLine("Oops, unexpected situation: {0}", _reader);
                 }
 
                 break;
@@ -337,7 +337,7 @@ public class AssemblyGenerator
     /// </summary>
     private void Start()
     {
-        var t2 = tokens[1] ?? null;
+        var t2 = _tokens[1] ?? null;
         var firstProcedure = t2?.Replace(".", "_") ?? string.Empty;
 
         Emit("start proc");
