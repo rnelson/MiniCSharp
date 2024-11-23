@@ -80,7 +80,7 @@ public class AssemblyGenerator
     /// </summary>
     /// <param name="tacAddress">The address in TAC format</param>
     /// <returns>The address in x86 assembly format</returns>
-    private static string GetAddress(string tacAddress)
+    private static string? GetAddress(string? tacAddress)
     {
         // If we have a number, return it as-is
         if (TypeHelper.IsNumeric(tacAddress))
@@ -360,7 +360,7 @@ public class AssemblyGenerator
     /// <param name="dest">Destination location</param>
     /// <param name="left">LHS</param>
     /// <param name="right">RHS</param>
-    private void Add(string dest, string left, string right)
+    private void Add(string? dest, string? left, string? right)
     {
         // If we're adding 1, just increment. Optimization!
         if (left == "1" && !TypeHelper.IsNumeric(right))
@@ -415,7 +415,7 @@ public class AssemblyGenerator
     /// <param name="dest">Destination location</param>
     /// <param name="left">LHS</param>
     /// <param name="right">RHS</param>
-    private void Sub(string dest, string left, string right)
+    private void Sub(string? dest, string? left, string? right)
     {
         // If we're subtracting 1, just decrement. Optimization!
         if (left == "1" && !TypeHelper.IsNumeric(right))
@@ -470,7 +470,7 @@ public class AssemblyGenerator
     /// <param name="dest">Destination location</param>
     /// <param name="left">LHS</param>
     /// <param name="right">RHS</param>
-    private void Mul(string dest, string left, string right)
+    private void Mul(string? dest, string? left, string? right)
     {
         // If we're multiplying by 0, just set the value to 0. Optimization!
         if (left == "0")
@@ -504,7 +504,7 @@ public class AssemblyGenerator
     /// <param name="dest">Destination location</param>
     /// <param name="left">LHS</param>
     /// <param name="right">RHS</param>
-    private void Div(string dest, string left, string right)
+    private void Div(string? dest, string? left, string? right)
     {
         // If we're dividing by 0, just set the value to 0. Optimization? This was in the original code. I don't
         // remember if this was part of the changes in MiniCSharp over standard C#, suddenly allowing division by
@@ -539,7 +539,7 @@ public class AssemblyGenerator
     /// </summary>
     /// <param name="dest">Destination location</param>
     /// <param name="right">RHS</param>
-    private void Neg(string dest, string right)
+    private void Neg(string? dest, string? right)
     {
         if (TypeHelper.IsNumeric(right))
         {
@@ -557,7 +557,7 @@ public class AssemblyGenerator
     /// </summary>
     /// <param name="dest">Destination location</param>
     /// <param name="src">Source location</param>
-    private void Ass(string dest, string src)
+    private void Ass(string? dest, string? src)
     {
         // If source and destination are the same, do nothing. Optimization!
         if (dest == src)
@@ -608,7 +608,7 @@ public class AssemblyGenerator
     /// Handle an intruction for writing an integer
     /// </summary>
     /// <param name="variable">The variable to print</param>
-    private void WriteInt(string variable)
+    private void WriteInt(string? variable)
     {
         Emit(TypeHelper.IsNumeric(variable)
             ? $"    mov ax, {variable}"
@@ -628,7 +628,7 @@ public class AssemblyGenerator
     /// Handle an instruction for reading an integer
     /// </summary>
     /// <param name="destination">The destination address</param>
-    private void ReadInt(string destination)
+    private void ReadInt(string? destination)
     {
         Emit("    push bx");
         Emit("    call readint");

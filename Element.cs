@@ -1,20 +1,24 @@
 namespace MiniCSharp;
 
+/// <summary>
 /// Parameter information for methods
-/// 
-/// \author Ross Nelson
+/// </summary>
 public class Parameter
 {
-    public Element.PassingMode Mode; /* passing mode */
-    public Element.VariableType Type; /* type of the variable */
+    /// <summary>
+    /// Passing mode
+    /// </summary>
+    public Element.PassingMode Mode { get; set; }
+    
+    /// <summary>
+    /// Variable type
+    /// </summary>
+    public Element.VariableType Type { get; set; }
 
-    /// Constructor for the Parameter class
-    public Parameter()
-    {
-    }
-
+    /// <summary>
     /// Return a string indicating the passing mode for the object
-    /// \return The textual representation of the passing mode
+    /// </summary>
+    /// <returns>The textual representation of the passing mode</returns>
     public override string ToString() =>
         Mode switch
         {
@@ -24,73 +28,94 @@ public class Parameter
         };
 }
 
+/// <summary>
 /// An element in the hash table
-/// 
-/// \author Ross Nelson
+/// </summary>
 public class Element
 {
     public enum EntryType
     {
-        VarType, /* variable */
-        ConstType, /* constant */
-        MethodType, /* method/function */
-        ClassType, /* class */
-        EmptyType /* nada */
+        Variable,
+        Constant,
+        Method,
+        Class,
+        Empty
     }
 
     public enum PassingMode
     {
-        Normal, /* pass by value */
-        Reference, /* pass by reference */
-        Output /* out mode passing */
+        Normal, // pass by value
+        Reference,
+        Output
     }
 
     public enum VariableType
     {
-        Int32, /* integer */
-        Char, /* character */
-        Float, /* float */
-        Void, /* void */
-        Empty /* nada */
+        Int32,
+        Char,
+        Float,
+        Void,
+        Empty
     }
 
-    private Globals.Symbol accessibilityModifier; /* access modifier */
-    private char charval; /* value - VarType:charType */
-    public string ChildList; /* list of children (if applicable) */
+    private Globals.Symbol _accessibilityModifier; // access modifier
+    private int _depth; // the depth we are at
+    private char _charValue; // value - VarType:charType
+    private float _floatValue; // value - VarType:Float
+    private int _integerValue; // value - VarType:Int32
+    private string? _lexeme; // the element's lexeme
+    private int _parameterCount; // number of parameters - EntryType:methodType
+    private int _offset; // offset
+    private string? _nameInOffsetNotation; // variable in offset notation
+    private int _sizeOfLocals; // size of local variables
+    private int _sizeOfParameters; // size of parameters
+    private Globals.Symbol _token; // token type
+    private EntryType _type; // entry type
+    
+    /// <summary>
+    /// List of children (if applicable)
+    /// </summary>
+    public string? ChildList { get; set; }
+    
+    /// <summary>
+    /// The location it is in a method declaration
+    /// </summary>
+    public int Location { get; set; }
+    
+    /// <summary>
+    /// Passing mode for the element
+    /// </summary>
+    public PassingMode Mode { get; set; } = PassingMode.Normal;
+    
+    /// <summary>
+    /// The next element in the list
+    /// </summary>
+    public Element? Next { get; set; }
+    
+    /// <summary>
+    /// The parent element to a given element
+    /// </summary>
+    public Element? Parent { get; set; }
+    
+    /// <summary>
+    /// Variable type
+    /// </summary>
+    public VariableType Type { get; set; } = VariableType.Empty;
 
-    private int depth; /* the depth we are at */
-    private float floatValue; /* value - VarType:Float */
-    private int integerValue; /* value - VarType:Int32 */
-    private string lexeme; /* the element's lexeme */
-    public int Location; /* the location it is in a method declaration */
-    public PassingMode Mode { get; set; } = PassingMode.Normal; /* passing mode */
-    public Element? Next; /* the next element in the list */
-
-    private int parameterCount; /* number of parameters - EntryType:methodType */
-
-    private int offset; /* offset */
-    private string nameInOffsetNotation; /* variable in offset notation */
-
-    public Element? Parent; /* the parent element to a given element */
-    private int sizeOfLocals; /* size of local variables */
-    private int sizeOfParameters; /* size of parameters */
-
-    private Globals.Symbol token; /* token type */
-
-    private EntryType type; /* entry type */
-    public VariableType Type { get; set; } = VariableType.Empty; /* variable type */
-
+    /// <summary>
     /// Constructor for the Element class
+    /// </summary>
     public Element()
     {
-        /* initialize variables */
         InitValues();
     }
 
+    /// <summary>
     /// Set default values for the element
+    /// </summary>
     public void InitValues()
     {
-        type = EntryType.EmptyType;
+        _type = EntryType.Empty;
         Type = VariableType.Empty;
         Mode = PassingMode.Normal;
         Location = 0;
@@ -105,52 +130,66 @@ public class Element
         Parent = null;
     }
 
+    /// <summary>
     /// Set the access modifier for the element
-    public void SetAccess(Globals.Symbol accMod)
+    /// </summary>
+    /// <param name="accessModifier">The access modifier to use</param>
+    public void SetAccess(Globals.Symbol accessModifier)
     {
-        accessibilityModifier = accMod;
+        _accessibilityModifier = accessModifier;
     }
 
+    /// <summary>
     /// Set the element to be of type int
+    /// </summary>
     public void SetInteger()
     {
         Type = VariableType.Int32;
         SetToken(Globals.Symbol.Int);
-        if (type != EntryType.ConstType)
+        if (_type != EntryType.Constant)
             SetVariable();
     }
 
+    /// <summary>
     /// Set the element to be of type float
+    /// </summary>
     public void SetFloat()
     {
         Type = VariableType.Float;
         SetToken(Globals.Symbol.Float);
-        if (type != EntryType.ConstType)
+        if (_type != EntryType.Constant)
             SetVariable();
     }
 
+    /// <summary>
     /// Set the element to be of type char
+    /// </summary>
     public void SetCharacter()
     {
         Type = VariableType.Char;
         SetToken(Globals.Symbol.Char);
-        if (type != EntryType.ConstType)
+        if (_type != EntryType.Constant)
             SetVariable();
     }
 
+    /// <summary>
     /// Set the element to be of type const
+    /// </summary>
     public void SetConstant()
     {
-        type = EntryType.ConstType;
+        _type = EntryType.Constant;
     }
 
+    /// <summary>
     /// Set the element to be a method/function
-    public void SetMethod(Globals.Symbol access)
+    /// </summary>
+    /// <param name="returnType">The method's return type</param>
+    public void SetMethod(Globals.Symbol returnType)
     {
-        type = EntryType.MethodType;
+        _type = EntryType.Method;
 
-        /* set the method's return type */
-        Type = (int)access switch
+        // Set the method's return type
+        Type = (int)returnType switch
         {
             (int)Globals.Symbol.Int => VariableType.Int32,
             (int)Globals.Symbol.Char => VariableType.Char,
@@ -160,180 +199,191 @@ public class Element
         };
     }
 
+    /// <summary>
     /// Set the element to be a class
+    /// </summary>
     public void SetClass()
     {
-        type = EntryType.ClassType;
+        _type = EntryType.Class;
     }
 
+    /// <summary>
     /// Set the element to be a variable
+    /// </summary>
     public void SetVariable()
     {
-        type = EntryType.VarType;
+        _type = EntryType.Variable;
     }
 
+    /// <summary>
     /// Set the integer value of the element
-    /// \param value The value for the object to hold
+    /// </summary>
+    /// <param name="value">The value for the object to hold</param>
     public void SetValue(int value)
     {
-        integerValue = value;
+        _integerValue = value;
     }
 
+    /// <summary>
     /// Set the floating point value of the element
-    /// \param value The value for the object to hold
+    /// </summary>
+    /// <param name="value">The value for the object to hold</param>
     public void SetValue(float value)
     {
-        floatValue = value;
+        _floatValue = value;
     }
 
+    /// <summary>
     /// Set the character value of the element
-    /// \param value The value for the object to hold
+    /// </summary>
+    /// <param name="value">The value for the object to hold</param>
     public void SetValue(char value)
     {
-        charval = value;
+        _charValue = value;
     }
 
+    /// <summary>
     /// Set the token type for the element
-    /// \param tok token type
-    public void SetToken(Globals.Symbol tok)
+    /// </summary>
+    /// <param name="tokenType">token type</param>
+    public void SetToken(Globals.Symbol tokenType)
     {
-        token = tok;
+        _token = tokenType;
     }
 
+    /// <summary>
     /// Get the integer value of the element
-    /// \return The value stored in the object
-    public int GetIntegerValue()
-    {
-        return integerValue;
-    }
+    /// </summary>
+    /// <returns>The value stored in the object</returns>
+    public int GetIntegerValue() => _integerValue;
 
+    /// <summary>
     /// Get the floating point value of the element
-    /// \return The value stored in the object
-    public float GetFloatValue()
-    {
-        return floatValue;
-    }
+    /// </summary>
+    /// <returns>The value stored in the object</returns>
+    public float GetFloatValue() => _floatValue;
 
+    /// <summary>
     /// Get the character value of the element
-    /// \return The value stored in the object
-    public char GetCharacterValue()
-    {
-        return charval;
-    }
+    /// </summary>
+    /// <returns>The value stored in the object</returns>
+    public char GetCharacterValue() => _charValue;
 
+    /// <summary>
     /// Get the token type for the element
-    /// \return token type
-    public Globals.Symbol GetToken()
-    {
-        return token;
-    }
+    /// </summary>
+    /// <returns>token type</returns>
+    public Globals.Symbol GetToken() => _token;
 
+    /// <summary>
     /// Set the variable name
-    /// \param name The name of the variable to be stored
-    public void SetName(string name)
+    /// </summary>
+    /// <param name="name">The name of the variable to be stored</param>
+    public void SetName(string? name)
     {
-        lexeme = name;
+        _lexeme = name;
     }
 
+    /// <summary>
     /// Set the offset value
-    /// \param value The offset
+    /// </summary>
+    /// <param name="value">The offset</param>
     public void SetOffset(int value)
     {
-        offset = value;
-        nameInOffsetNotation = $"_BP{(offset < 0 ? offset.ToString() : $"+{offset}")}";
+        _offset = value;
+        _nameInOffsetNotation = $"_BP{(_offset < 0 ? _offset.ToString() : $"+{_offset}")}";
 
-        if (depth == 1)
-            nameInOffsetNotation = lexeme;
+        if (_depth == 1)
+            _nameInOffsetNotation = _lexeme;
     }
 
+    /// <summary>
     /// Set the size of local variables
-    /// \param value size of local variables in a class/method
+    /// </summary>
+    /// <param name="value">size of local variables in a class/method</param>
     public void SetSizeOfLocals(int value)
     {
-        sizeOfLocals = value;
+        _sizeOfLocals = value;
     }
 
+    /// <summary>
     /// Set the size of parameters
-    /// \param value size of parameters in a method
+    /// </summary>
+    /// <param name="value">size of parameters in a method</param>
     public void SetSizeOfParams(int value)
     {
-        sizeOfParameters = value;
+        _sizeOfParameters = value;
     }
 
+    /// <summary>
     /// Set the number of parameters that a method has
-    /// \param value The number of parameters
+    /// </summary>
+    /// <param name="value">The number of parameters</param>
     public void SetNumParams(int value)
     {
-        parameterCount = value;
+        _parameterCount = value;
     }
 
+    /// <summary>
     /// Set the depth for a specific element
-    /// \param value The depth
+    /// </summary>
+    /// <param name="value">The depth</param>
     public void SetDepth(int value)
     {
-        depth = value;
+        _depth = value;
     }
 
+    /// <summary>
     /// Obtain the name of the variable
-    /// \return The variable name
-    public string GetName()
-    {
-        return lexeme;
-    }
+    /// </summary>
+    /// <returns>The variable name</returns>
+    public string? GetName() => _lexeme;
 
+    /// <summary>
     /// Obtain the offset
-    /// \return The offset
-    public int GetOffset()
-    {
-        return offset;
-    }
+    /// </summary>
+    /// <returns>The offset</returns>
+    public int GetOffset() => _offset;
 
+    /// <summary>
     /// Obtain the variable in offset notation
-    /// \return The offset notation
-    public string GetOffsetName()
-    {
-        return nameInOffsetNotation;
-    }
+    /// </summary>
+    /// <returns>The offset notation</returns>
+    public string? GetOffsetName() => _nameInOffsetNotation;
 
+    /// <summary>
     /// Obtain the size of the variable or the size of local variables in the class/method
-    /// \return The size
-    public int GetSizeOfLocals()
-    {
-        return sizeOfLocals;
-    }
+    /// </summary>
+    /// <returns>The size</returns>
+    public int GetSizeOfLocals() => _sizeOfLocals;
 
+    /// <summary>
     /// Obtain the size of the variable or the size of parameters in the method
-    /// \return The size
-    public int GetSizeOfParams()
-    {
-        return sizeOfParameters;
-    }
+    /// </summary>
+    /// <returns>The size</returns>
+    public int GetSizeOfParams() => _sizeOfParameters;
 
+    /// <summary>
     /// Obtain the depth of the variable
-    /// \return The depth
-    public int GetDepth()
-    {
-        return depth;
-    }
+    /// </summary>
+    /// <returns>The depth</returns>
+    public int GetDepth() => _depth;
 
+    /// <summary>
     /// Obtain the number of parameters of the variable
-    /// \return The number of parameters
-    public int GetNumParams()
-    {
-        return parameterCount;
-    }
+    /// </summary>
+    /// <returns>The number of parameters</returns>
+    public int GetNumParams() => _parameterCount;
 
+    /// <summary>
     /// Get the type of the element
-    /// \return EntryType of the element
-    public EntryType GetEType()
-    {
-        return type;
-    }
+    /// </summary>
+    /// <returns>EntryType of the element</returns>
+    public EntryType GetEntryType() => _type;
 
+    /// <summary>
     /// Get the type of the element
-    /// \return VarType of the element
-    public VariableType GetVType()
-    {
-        return Type;
-    }
+    /// </summary>
+    /// <returns>VarType of the element</returns>
+    public VariableType GetVariableType() => Type;
 }

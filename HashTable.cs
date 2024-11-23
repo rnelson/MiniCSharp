@@ -69,7 +69,7 @@ public class HashTable
 	/// \param token token type
 	/// \param depth the depth at which to store the Element
 	/// \return pointer to the new element
-	public Element? Insert(string lexeme, Globals.Symbol token, int depth)
+	public Element? Insert(string? lexeme, Globals.Symbol token, int depth)
     {
         /* reserve memory for the new node */
         var el = new Element();
@@ -85,7 +85,7 @@ public class HashTable
         el.Next = null;
 
         /* keep track of if we have a constant or not */
-        var haveConst = el.GetEType() == Element.EntryType.ConstType;
+        var haveConst = el.GetEntryType() == Element.EntryType.Constant;
 
         /* set the type */
         switch ((int)token)
@@ -134,7 +134,7 @@ public class HashTable
     /// Search the hash table for a specific element.
 	/// \param lexeme variable name to find
 	/// \return a pointer to the desired element, or null
-	public Element? Lookup(string lexeme)
+	public Element? Lookup(string? lexeme)
     {
         /* create a pointer to an Element */
         Element? el;
@@ -207,13 +207,15 @@ public class HashTable
                         Console.WriteLine(header);
                     }
 
-                    var etype = el.GetEType();
-                    var vtype = el.GetVType();
+                    var etype = el.GetEntryType();
+                    var vtype = el.GetVariableType();
                     var lexeme = el.GetName();
                     var token = Globals.Tokens[(int)el.GetToken()];
                     var offset = el.GetOffset().ToString();
                     var size = el.GetSizeOfLocals().ToString();
-                    string vartype = string.Empty, value = string.Empty, output = string.Empty;
+                    string? vartype = string.Empty;
+                    string value = string.Empty;
+                    string? output = string.Empty;
 
                     switch ((int)vtype)
                     {
@@ -243,7 +245,7 @@ public class HashTable
                     /* information into one big string and spit that out to the screen */
                     switch ((int)etype)
                     {
-                        case (int)Element.EntryType.VarType:
+                        case (int)Element.EntryType.Variable:
                             switch ((int)el.Mode)
                             {
                                 case (int)Element.PassingMode.Output:
@@ -264,14 +266,14 @@ public class HashTable
                             output += $"\t//size:{size}";
                             output += $" offset:{offset}";
                             break;
-                        case (int)Element.EntryType.ConstType:
+                        case (int)Element.EntryType.Constant:
                             output += "const ";
                             output += $"{vartype} ";
                             output += lexeme;
                             output += $"\t//size:{size}";
                             output += $" offset:{offset}";
 
-                            switch ((int)el.GetVType())
+                            switch ((int)el.GetVariableType())
                             {
                                 case (int)Element.VariableType.Int32:
                                     output += $" value:{el.GetIntegerValue()}";
@@ -282,7 +284,7 @@ public class HashTable
                             }
 
                             break;
-                        case (int)Element.EntryType.MethodType:
+                        case (int)Element.EntryType.Method:
                             output += vartype;
                             if (vartype != string.Empty) output += " ";
                             output += $"{lexeme}() ";
@@ -292,7 +294,7 @@ public class HashTable
                             if (el.ChildList.Length > 0)
                                 output += el.ChildList;
                             break;
-                        case (int)Element.EntryType.ClassType:
+                        case (int)Element.EntryType.Class:
                             output += "class ";
                             output += $"{lexeme} ";
                             output += $"\t//size:{size}";
@@ -386,7 +388,7 @@ public class HashTable
             while (search != null)
             {
                 if (search.GetDepth() == dep)
-                    if (search.GetEType() == Element.EntryType.VarType)
+                    if (search.GetEntryType() == Element.EntryType.Variable)
                         if (retval.Length == 0)
                             retval = $"{search.GetName()} dw ?";
                         else
@@ -402,7 +404,7 @@ public class HashTable
 	/// Get child information for an element
 	/// \param ele the element
 	/// \return string containing child information, parsable format
-	public string GetChildren(Element? ele)
+	public string? GetChildren(Element? ele)
     {
         var retstr = string.Empty;
         Element? search = null;
@@ -428,7 +430,7 @@ public class HashTable
                             break;
                     }
 
-                    switch ((int)search.GetVType())
+                    switch ((int)search.GetVariableType())
                     {
                         case (int)Globals.Symbol.Int:
                             retstr += "int ";
@@ -455,7 +457,7 @@ public class HashTable
 	/// Get child information for an element
 	/// \param ele the element
 	/// \return string containing child information, printable format
-	public string GetChildrenPrint(Element? ele)
+	public string? GetChildrenPrint(Element? ele)
     {
         var retstr = "\n";
         Element? search = null;
@@ -482,7 +484,7 @@ public class HashTable
                             break;
                     }
 
-                    switch ((int)search.GetVType())
+                    switch ((int)search.GetVariableType())
                     {
                         case (int)Globals.Symbol.Int:
                             retstr += "int ";
@@ -508,7 +510,7 @@ public class HashTable
 
 	/// Implementation of hashpjw, page 436 of Compilers (dragon)
 	/// \param name string to hash
-	private static int Hash(string name)
+	private static int Hash(string? name)
     {
         long h = 0, g;
 

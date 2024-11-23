@@ -67,12 +67,12 @@ public static class Globals
     // none
 
     // "Global" variables for Lexical.cs
-    public static string Lexeme; /* the lexeme GetNextToken() finds */
+    public static string? Lexeme; /* the lexeme GetNextToken() finds */
     public static int Value; /* integer value */
     public static double ValueF; /* floating point value */
     public static string Literal; /* a string literal */
     public static string[] ReservedWords; /* the reserved words list */
-    public static string[] Tokens; /* textual representation of tokens */
+    public static string?[] Tokens; /* textual representation of tokens */
     public static int Linecount; /* the number of lines printed to the screen */
     public static int CurLine; /* the current line number */
     public static string Filename; /* the filename */
@@ -156,7 +156,7 @@ public static class Globals
 
         /* do the same for Tokens */
         index = 0;
-        Tokens = new string[55];
+        Tokens = new string?[55];
         Tokens[index++] = "class";
         Tokens[index++] = "if";
         Tokens[index++] = "new";

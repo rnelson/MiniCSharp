@@ -124,7 +124,7 @@ internal class Parser
     /// \param line line number
     /// \param expected the expected token
     /// \param found the token that was found
-    private static void Error(int line, string expected, string found)
+    private static void Error(int line, string? expected, string? found)
     {
         Console.WriteLine("error: {0}:{1}: expecting {2} but found {3}", Globals.Filename, line, expected, found);
         Globals.Wait("\nPress enter...");
@@ -264,7 +264,7 @@ internal class Parser
 
     /// Compare the current token with the desired one, error out if they don't match
     /// \param desired the desired string
-    private void Match(string desired)
+    private void Match(string? desired)
     {
         if (Globals.Token == Globals.Symbol.Eof) Error(Globals.CurLine, desired, "end of file");
 
@@ -338,7 +338,7 @@ internal class Parser
     /// \param depth the depth at which the lexeme should be added
     /// \return address to the new symbol
     private Element? AddSymbol(Globals.Symbol pMode, Globals.Symbol accMod, Globals.Symbol type, Globals.Symbol token,
-        string lexeme, int depth)
+        string? lexeme, int depth)
     {
         /* add the identifier */
         var e = Globals.SymbolTable.Lookup(lexeme);
@@ -426,13 +426,13 @@ internal class Parser
         {
             /* update the local variable size for classes */
             if (parent != null)
-                if (parent.GetEType() == Element.EntryType.ClassType)
+                if (parent.GetEntryType() == Element.EntryType.Class)
                 {
                     classSize += mysize;
-                    if (currentObject.GetEType() == Element.EntryType.MethodType)
+                    if (currentObject.GetEntryType() == Element.EntryType.Method)
                         currentMethod = currentObject;
                 }
-                else if (parent.GetEType() == Element.EntryType.MethodType)
+                else if (parent.GetEntryType() == Element.EntryType.Method)
                 {
                     if (!isInParameterList)
                         parent.SetSizeOfLocals(parent.GetSizeOfLocals() + mysize);
@@ -544,7 +544,7 @@ internal class Parser
         }
         else
         {
-            string rhside;
+            string? rhside;
             Expr("", out rhside);
 
             if (rhside != string.Empty)
@@ -553,7 +553,7 @@ internal class Parser
                 {
                     var rh = Globals.SymbolTable.Lookup(rhside);
 
-                    if (rh.GetEType() == Element.EntryType.ConstType)
+                    if (rh.GetEntryType() == Element.EntryType.Constant)
                         Emit($"  {e.GetOffsetName()} = {rh.GetIntegerValue()}\n");
                     else
                         Emit($"  {e.GetOffsetName()} = {rh.GetOffsetName()}\n");
@@ -584,8 +584,8 @@ internal class Parser
     }
 
     /// Implements the grammar rule: AssignTail -> idt . MethodCall | idt ShortExpr
-    private void AssignTail(ref Element getMethod, Element? parent, string retLoc, bool standAloneCall,
-        out string rhSide)
+    private void AssignTail(ref Element getMethod, Element? parent, string? retLoc, bool standAloneCall,
+        out string? rhSide)
     {
         if (standAloneCall)
             Match(Globals.Symbol.Period);
@@ -607,7 +607,7 @@ internal class Parser
             if (parent == null)
                 parent = Globals.SymbolTable.Lookup(prnt);
 
-            string nsaMethod;
+            string? nsaMethod;
             rhSide = string.Empty;
             getMethod = e;
             MethodCall(standAloneCall, out nsaMethod);
@@ -635,7 +635,7 @@ internal class Parser
         }
         else
         {
-            string rightLexeme;
+            string? rightLexeme;
             ShortExpr(e.GetName(), out rightLexeme);
 
             if (retLoc.Length > 0)
@@ -644,7 +644,7 @@ internal class Parser
                 var l = Globals.SymbolTable.Lookup(retLoc);
                 var r = Globals.SymbolTable.Lookup(rightLexeme);
 
-                if (r.GetEType() == Element.EntryType.ConstType)
+                if (r.GetEntryType() == Element.EntryType.Constant)
                     Emit($"  {l.GetOffsetName()} = {r.GetIntegerValue()}\n");
                 else
                     Emit($"  {l.GetOffsetName()} = {r.GetOffsetName()}\n");
@@ -732,7 +732,7 @@ internal class Parser
     private void Composite()
     {
         Globals.Symbol accMod, type = Globals.Symbol.Unknown;
-        string idt;
+        string? idt;
 
         localOffset = 4;
         offsetmul = 1;
@@ -792,7 +792,7 @@ internal class Parser
     ///
     /// Implements the grammar rule: CompositeTail -> [return] [;] [}] | [(] ParamList [)] [{] IdentifierList StatList ReturnLine [}] | [;]
     ///
-    void CompositeTail(string idt)
+    void CompositeTail(string? idt)
     {
             switch ((int)Globals.Token)
             {
@@ -903,7 +903,7 @@ internal class Parser
     }
 
     /// Implements the grammar rule: Expr -> Relation | lambda
-    private void Expr(string left, out string right)
+    private void Expr(string left, out string? right)
     {
         switch ((int)Globals.Token)
         {
@@ -922,9 +922,9 @@ internal class Parser
     }
 
     /// Implements the grammar rule: Factor -> idt | numt | [(] Expr [)] | [!] Factor | signop Factor
-    private void Factor(out string mylex)
+    private void Factor(out string? mylex)
     {
-        string fname;
+        string? fname;
         switch ((int)Globals.Token)
         {
             case (int)Globals.Symbol.Identifier:
@@ -973,7 +973,7 @@ internal class Parser
                     var f = Globals.SymbolTable.Lookup(fname);
                     var n = Newtemp();
 
-                    if (f.GetEType() == Element.EntryType.ConstType)
+                    if (f.GetEntryType() == Element.EntryType.Constant)
                         Emit($"  {n.GetOffsetName()} = {f.GetIntegerValue()}\n");
                     else
                         Emit($"  {n.GetOffsetName()} = -{f.GetOffsetName()}\n");
@@ -1121,9 +1121,9 @@ internal class Parser
 
                 /* if it's not a class but has a size of 0, reset the size -- hit a bug somewhere */
                 if (e.GetSizeOfLocals() == 0 &&
-                    !(e.GetEType() == Element.EntryType.ClassType || e.GetEType() == Element.EntryType.MethodType))
+                    !(e.GetEntryType() == Element.EntryType.Class || e.GetEntryType() == Element.EntryType.Method))
                 {
-                    switch ((int)e.GetVType())
+                    switch ((int)e.GetVariableType())
                     {
                         case (int)Element.VariableType.Char:
                             e.SetSizeOfLocals(e.GetSizeOfLocals() + 1);
@@ -1212,7 +1212,7 @@ internal class Parser
     }
 
     /// Implements the grammar rule: MainIDT -> [idt] MainIDT | [main] [(] [)] [{] IdentifierList StatList | [,] [idt] MainIDT | lambda
-    private void MainIdt(Globals.Symbol accMod, Globals.Symbol type, out string idt)
+    private void MainIdt(Globals.Symbol accMod, Globals.Symbol type, out string? idt)
     {
         idt = string.Empty;
         /* take care of the constructor */
@@ -1224,7 +1224,7 @@ internal class Parser
 
         if (Globals.Token == Globals.Symbol.Identifier && Globals.Lexeme != "Main")
         {
-            string recurIdt;
+            string? recurIdt;
             idt = Globals.Lexeme;
             Idt(accMod, type);
             MainIdt(accMod, type, out recurIdt);
@@ -1263,7 +1263,7 @@ internal class Parser
     }
 
     /// Implements the grammar rule: MethodCall -> idt ( Params )
-    private void MethodCall(bool standAloneCall, out string methodName)
+    private void MethodCall(bool standAloneCall, out string? methodName)
     {
         var pushStats = string.Empty;
 
@@ -1305,7 +1305,7 @@ internal class Parser
     }
 
     /// Implements the grammar rule: MoreFactor -> Mulop Factor MoreFactor | lambda
-    private void MoreFactor(string leftLexeme, out string rightLexeme, string oldmulchar, out string mulchar,
+    private void MoreFactor(string? leftLexeme, out string? rightLexeme, string? oldmulchar, out string? mulchar,
         bool firstRound)
     {
         switch ((int)Globals.Token)
@@ -1321,7 +1321,11 @@ internal class Parser
                 Element? rLex;
                 mulchar = Globals.Lexeme;
                 oldmulchar = mulchar;
-                string factLexeme, lvar, rvar, recurLexeme, newmulchar;
+                string? factLexeme;
+                string? lvar;
+                string? rvar;
+                string? recurLexeme;
+                string? newmulchar;
 
                 Mulop();
                 Factor(out factLexeme);
@@ -1337,7 +1341,7 @@ internal class Parser
                 /* ...and get string values for them */
                 if (lLex != null)
                 {
-                    if (lLex.GetEType() == Element.EntryType.ConstType)
+                    if (lLex.GetEntryType() == Element.EntryType.Constant)
                         lvar = lLex.GetIntegerValue().ToString();
                     else
                         lvar = lLex.GetOffsetName();
@@ -1353,7 +1357,7 @@ internal class Parser
 
                 if (rLex != null)
                 {
-                    if (rLex.GetEType() == Element.EntryType.ConstType)
+                    if (rLex.GetEntryType() == Element.EntryType.Constant)
                         rvar = rLex.GetIntegerValue().ToString();
                     else
                         rvar = rLex.GetOffsetName();
@@ -1382,7 +1386,7 @@ internal class Parser
     }
 
     /// Implements the grammar rule: MoreTerm -> Addop Term MoreTerm | lambda
-    private void MoreTerm(string leftLexeme, out string rightLexeme, string oldaddchar, out string addchar,
+    private void MoreTerm(string? leftLexeme, out string? rightLexeme, string? oldaddchar, out string? addchar,
         bool firstRound)
     {
         switch ((int)Globals.Token)
@@ -1393,7 +1397,11 @@ internal class Parser
                 Element? rLex;
                 addchar = Globals.Lexeme;
                 oldaddchar = addchar;
-                string termLexeme, lvar, rvar, recurLexeme, newaddchar;
+                string? termLexeme;
+                string? lvar;
+                string? rvar;
+                string? recurLexeme;
+                string? newaddchar;
 
                 Addop();
                 Term(out termLexeme);
@@ -1409,7 +1417,7 @@ internal class Parser
                 /* ...and get string values for them */
                 if (lLex != null)
                 {
-                    if (lLex.GetEType() == Element.EntryType.ConstType)
+                    if (lLex.GetEntryType() == Element.EntryType.Constant)
                         lvar = lLex.GetIntegerValue().ToString();
                     else
                         lvar = lLex.GetOffsetName();
@@ -1425,7 +1433,7 @@ internal class Parser
 
                 if (rLex != null)
                 {
-                    if (rLex.GetEType() == Element.EntryType.ConstType)
+                    if (rLex.GetEntryType() == Element.EntryType.Constant)
                         rvar = rLex.GetIntegerValue().ToString();
                     else
                         rvar = rLex.GetOffsetName();
@@ -1551,7 +1559,7 @@ internal class Parser
                     var mysize = 0;
                     var cont = false;
 
-                    switch ((int)e.GetVType())
+                    switch ((int)e.GetVariableType())
                     {
                         case (int)Element.VariableType.Int32:
                             e.SetInteger();
@@ -1598,7 +1606,7 @@ internal class Parser
                     var mysize = 0;
                     var cont = false;
 
-                    switch ((int)e.GetVType())
+                    switch ((int)e.GetVariableType())
                     {
                         case (int)Element.VariableType.Int32:
                             e.SetInteger();
@@ -1634,7 +1642,7 @@ internal class Parser
                         if (e.Parent.GetName() != currentClass.GetName())
                             localOffset += mysize * offsetmul;
 
-                        if (e.Parent.GetEType() == Element.EntryType.MethodType)
+                        if (e.Parent.GetEntryType() == Element.EntryType.Method)
                             e.Parent.SetSizeOfParams(e.Parent.GetSizeOfParams() + mysize);
                     }
                 }
@@ -1644,7 +1652,8 @@ internal class Parser
                 break;
             case (int)Globals.Symbol.Return:
                 Match(Globals.Symbol.Return);
-                string a = string.Empty, b;
+                string a = string.Empty;
+                string? b;
                 Expr(a, out b);
                 Match(Globals.Symbol.Semicolon);
                 break;
@@ -1673,7 +1682,7 @@ internal class Parser
                     var mysize = 0;
                     var cont = false;
 
-                    switch ((int)e.GetVType())
+                    switch ((int)e.GetVariableType())
                     {
                         case (int)Element.VariableType.Int32:
                             e.SetInteger();
@@ -1708,7 +1717,7 @@ internal class Parser
                         if (e.Parent.GetName() != currentClass.GetName())
                             localOffset += mysize * offsetmul;
 
-                        if (e.Parent.GetEType() == Element.EntryType.MethodType)
+                        if (e.Parent.GetEntryType() == Element.EntryType.Method)
                             e.Parent.SetSizeOfParams(e.Parent.GetSizeOfParams() + mysize);
                     }
                 }
@@ -1807,7 +1816,7 @@ internal class Parser
     ///
     /// Implements the grammar rule: Relation -> SimpleExpr
     ///
-    void Relation(out string lex)
+    void Relation(out string? lex)
     {
         SimpleExpr(out lex);
     }
@@ -1825,7 +1834,8 @@ internal class Parser
                 /* Main() doesn't return a value */
                 if (!inMain)
                 {
-                    string a = string.Empty, retval;
+                    string a = string.Empty;
+                    string? retval;
                     Expr(a, out retval);
                     var r = Globals.SymbolTable.Lookup(retval);
                     if (r != null)
@@ -1844,9 +1854,10 @@ internal class Parser
     ///
     /// Implements the grammar rule: ShortExpr -> MoreFactor MoreTerm
     ///
-    void ShortExpr(string leftLexeme, out string rightLexeme)
+    void ShortExpr(string? leftLexeme, out string? rightLexeme)
     {
-        string tmpchar, factRight;
+        string? tmpchar;
+        string? factRight;
         MoreFactor(leftLexeme, out factRight, string.Empty, out tmpchar, true);
         MoreTerm(factRight, out rightLexeme, string.Empty, out tmpchar, true);
     }
@@ -1870,9 +1881,10 @@ internal class Parser
     ///
     /// Implements the grammar rule: SimpleExpr -> Term MoreTerm
     ///
-    void SimpleExpr(out string rightLexeme)
+    void SimpleExpr(out string? rightLexeme)
     {
-        string termLex, tmpchar;
+        string? termLex;
+        string? tmpchar;
         Term(out termLex);
         MoreTerm(termLex, out rightLexeme, string.Empty, out tmpchar, true);
     }
@@ -1919,9 +1931,10 @@ internal class Parser
     ///
     /// Implements the grammar rule: Term -> Factor MoreFactor
     ///
-    void Term(out string rightLexeme)
+    void Term(out string? rightLexeme)
     {
-        string leftLexeme, mulchar;
+        string? leftLexeme;
+        string? mulchar;
         Factor(out leftLexeme);
         MoreFactor(leftLexeme, out rightLexeme, string.Empty, out mulchar, true);
     }

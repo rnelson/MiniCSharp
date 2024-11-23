@@ -22,7 +22,7 @@ internal static class TypeHelper
     /// <param name="expression">The object to check</param>
     /// <returns><c>true</c> if <paramref name="expression"/> is numeric, else <c>false</c></returns>
     /// <seealso cref="http://dotnet.org.za/deonvs/archive/2004/07/06/2579.aspx"/>
-    public static bool IsNumeric(object expression) =>
+    public static bool IsNumeric(object? expression) =>
         double.TryParse(Convert.ToString(expression),
             NumberStyles.Any,
             NumberFormatInfo.InvariantInfo,

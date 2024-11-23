@@ -5,7 +5,7 @@ namespace MiniCSharp;
 /// </summary>
 public class StringTable
 {
-    private readonly Dictionary<string, StringT> _stringTable = new();
+    private readonly Dictionary<string?, StringT> _stringTable = new();
 
     /// <summary>
     /// Keep track of the number of strings in the table
@@ -17,7 +17,7 @@ public class StringTable
     /// </summary>
     /// <param name="str">the value of the new string</param>
     /// <returns>pointer to the new element</returns>
-    public StringT Insert(string str)
+    public StringT Insert(string? str)
     {
         var newString = str;
 
