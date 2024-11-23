@@ -1,101 +1,109 @@
 namespace MiniCSharp;
 
+/// <summary>
 /// String table for the mini C# compiler
-/// 
-/// \author Ross Nelson
+/// </summary>
 public class StringTable
 {
-    /// the maximum number of strings
     private const int MaximumStrings = 99999;
-
-    /// keep track of the number of strings in the table
-    public int NumberOfStrings;
-
-    /// our array
     private readonly StringT?[] vertArray;
 
+    /// <summary>
+    /// Keep track of the number of strings in the table
+    /// </summary>
+    public int Count { get; private set; }
+
+    /// <summary>
     /// Constructor for the string table class
+    /// </summary>
     public StringTable()
     {
-        /* allocate space for the hash values */
         vertArray = new StringT?[MaximumStrings];
         InitTable();
     }
 
-    /// Initialize the hash table
-    public void InitTable()
-    {
-        for (var i = 0; i < MaximumStrings; i++)
-            vertArray[i] = null;
-    }
-
+    /// <summary>
     /// Insert a new string into the table
-    /// \param str the value of the new string
-    /// \return pointer to the new element
+    /// </summary>
+    /// <param name="str">the value of the new string</param>
+    /// <returns>pointer to the new element</returns>
     public StringT Insert(string str)
     {
-        var insstr = str;
+        var newString = str;
 
-        /* error out if we have no more memory */
-        if (NumberOfStrings >= MaximumStrings)
+        // Error out if we have no more memory
+        if (Count >= MaximumStrings)
         {
-            Console.WriteLine("error: no more memory available for additional strings, terminating");
+            Console.Error.WriteLine("error: no more memory available for additional strings, terminating");
             Environment.Exit(-3);
         }
 
-        /* check for duplicates */
-        for (var i = 0; i < NumberOfStrings; i++)
-            if (vertArray[i].String == str)
-                return vertArray[i];
+        // Check for duplicates
+        for (var i = 0; i < Count; i++)
+            if (vertArray[i]?.String == str)
+                return vertArray[i]!;
 
-        /* MASM 6.14 and 6.15 reject empty strings; change them to a space */
+        // MASM 6.14 and 6.15 reject empty strings; change them to a space
+        // TODO: are we still targeting an old MASM install? unlikely.
         if (str == "\"\"")
-            insstr = "\" \"";
+            newString = "\" \"";
 
-        /* set the new string and add it */
         var el = new StringT
         {
-            Name = $"_S{NumberOfStrings}",
-            String = insstr
+            Name = $"_S{Count}",
+            String = newString
         };
-        vertArray[NumberOfStrings] = el;
-        NumberOfStrings++;
+        
+        vertArray[Count] = el;
+        Count++;
 
         return el;
     }
 
+    /// <summary>
     /// Search the string table for a specific string.
-    /// \param name string name to find
-    /// \return a pointer to the desired element, or null
+    /// </summary>
+    /// <param name="name">string name to find</param>
+    /// <returns>a pointer to the desired element, or <c>null</c></returns>
     public StringT? Lookup(string name)
     {
-        /* create a pointer to a StringT */
-        StringT? el = null;
-
-        /* find the string */
-        for (var arrayLoc = 0; arrayLoc < NumberOfStrings; arrayLoc++)
+        for (var arrayLoc = 0; arrayLoc < Count; arrayLoc++)
         {
-            el = vertArray[arrayLoc];
-            if (el.Name == name)
-                return el;
+            var element = vertArray[arrayLoc];
+            if (element?.Name == name)
+                return element;
         }
 
-        /* return whatever we found */
         return null;
     }
 
+    /// <summary>
     /// Print out the entire string table (for debugging purposes)
+    /// </summary>
     public void PrintTable()
     {
+        if (vertArray.Length != Count)
+            throw new InternalCompilerException("error: table size mismatch",
+                debugInformation: "M:StringTable.PrintTable");
+        
         Console.WriteLine("Name  Value\n----  -----");
-        for (var arrayLoc = 0; arrayLoc < NumberOfStrings; arrayLoc++)
-            Console.WriteLine("{0}   {1}", vertArray[arrayLoc].Name, vertArray[arrayLoc].String);
+        for (var arrayLoc = 0; arrayLoc < Count; arrayLoc++)
+            Console.WriteLine("{0}   {1}", vertArray[arrayLoc]!.Name, vertArray[arrayLoc]!.String);
+    }
+
+    /// <summary>
+    /// Initialize the hash table
+    /// </summary>
+    private void InitTable()
+    {
+        for (var i = 0; i < MaximumStrings; i++)
+            vertArray[i] = null;
     }
 }
 
+/// <summary>
 /// String table object for the mini C# compiler
-/// 
-/// \author Ross Nelson
+/// </summary>
 public class StringT
 {
     public string? Name;

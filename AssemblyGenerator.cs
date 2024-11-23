@@ -164,7 +164,7 @@ public class AssemblyGenerator
         Emit("    .data");
 
         // Add all strings
-        for (var sc = 0; sc < strings.NumberOfStrings; sc++)
+        for (var sc = 0; sc < strings.Count; sc++)
         {
             var st = strings.Lookup($"_S{sc}");
 
