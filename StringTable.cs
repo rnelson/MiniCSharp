@@ -5,22 +5,12 @@ namespace MiniCSharp;
 /// </summary>
 public class StringTable
 {
-    private const int MaximumStrings = 99999;
-    private readonly StringT?[] vertArray;
+    private readonly Dictionary<string, StringT> _stringTable = new();
 
     /// <summary>
     /// Keep track of the number of strings in the table
     /// </summary>
-    public int Count { get; private set; }
-
-    /// <summary>
-    /// Constructor for the string table class
-    /// </summary>
-    public StringTable()
-    {
-        vertArray = new StringT?[MaximumStrings];
-        InitTable();
-    }
+    public int Count => _stringTable.Count;
 
     /// <summary>
     /// Insert a new string into the table
@@ -31,17 +21,9 @@ public class StringTable
     {
         var newString = str;
 
-        // Error out if we have no more memory
-        if (Count >= MaximumStrings)
-        {
-            Console.Error.WriteLine("error: no more memory available for additional strings, terminating");
-            Environment.Exit(-3);
-        }
-
         // Check for duplicates
-        for (var i = 0; i < Count; i++)
-            if (vertArray[i]?.String == str)
-                return vertArray[i]!;
+        if (_stringTable.TryGetValue(str, out var existingString))
+            return existingString;
 
         // MASM 6.14 and 6.15 reject empty strings; change them to a space
         // TODO: are we still targeting an old MASM install? unlikely.
@@ -54,9 +36,7 @@ public class StringTable
             String = newString
         };
         
-        vertArray[Count] = el;
-        Count++;
-
+        _stringTable.Add(str, el);
         return el;
     }
 
@@ -65,39 +45,16 @@ public class StringTable
     /// </summary>
     /// <param name="name">string name to find</param>
     /// <returns>a pointer to the desired element, or <c>null</c></returns>
-    public StringT? Lookup(string name)
-    {
-        for (var arrayLoc = 0; arrayLoc < Count; arrayLoc++)
-        {
-            var element = vertArray[arrayLoc];
-            if (element?.Name == name)
-                return element;
-        }
-
-        return null;
-    }
+    public StringT? Lookup(string name) => _stringTable.GetValueOrDefault(name);
 
     /// <summary>
     /// Print out the entire string table (for debugging purposes)
     /// </summary>
     public void PrintTable()
     {
-        if (vertArray.Length != Count)
-            throw new InternalCompilerException("error: table size mismatch",
-                debugInformation: "M:StringTable.PrintTable");
-        
         Console.WriteLine("Name  Value\n----  -----");
-        for (var arrayLoc = 0; arrayLoc < Count; arrayLoc++)
-            Console.WriteLine("{0}   {1}", vertArray[arrayLoc]!.Name, vertArray[arrayLoc]!.String);
-    }
-
-    /// <summary>
-    /// Initialize the hash table
-    /// </summary>
-    private void InitTable()
-    {
-        for (var i = 0; i < MaximumStrings; i++)
-            vertArray[i] = null;
+        foreach (var entry in _stringTable)
+            Console.WriteLine("{0}   {1}", entry.Value.Name, entry.Value.String);
     }
 }
 
